@@ -7,8 +7,8 @@ export type Document = { project: Project; image: string | null; bytes: Uint8Arr
 export const uid = () => crypto.randomUUID();
 export function emptyDocument(): Document { return { project: { id: uid(), version: 1, title: '無題の原稿', width: 1000, height: 1400, background: null, balloons: [] }, image: null, bytes: null }; }
 export function newBalloon(kind: Balloon['kind'], width: number, height: number, index: number): Balloon {
- const w = Math.min(260, width * .28), h = Math.min(320, height * .28);
- return { id: uid(), kind, x: Math.max(0, width*.58 + index%3*16 - w/2), y: Math.max(0, height*.18 + index%4*22), width: w, height: h, fill: '#ffffff', stroke: '#222222', strokeWidth: Math.max(2, width/450), tail: { enabled: kind === 'ellipse', a: {x:.54,y:.998}, b:{x:.73,y:.944}, p:{x:.86,y:1.34} }, text: 'ここに\nセリフを入力', style: { direction:'vertical', family:'sans', size: Math.max(16, Math.round(width/38)), bold: false, color:'#222222', lineHeight:1.5, spacing:0, padding:28, align:'center' } };
+ const w = Math.max(40, Math.min(260, width * .28)), h = Math.max(40, Math.min(320, height * .28));
+ return { id: uid(), kind, x: Math.max(0, width*.58 + index%3*16 - w/2), y: Math.max(0, height*.18 + index%4*22), width: w, height: h, fill: '#ffffff', stroke: '#222222', strokeWidth: Math.min(30, Math.max(2, width/450)), tail: { enabled: kind === 'ellipse', a: {x:.54,y:.998}, b:{x:.73,y:.944}, p:{x:.86,y:1.34} }, text: 'ここに\nセリフを入力', style: { direction:'vertical', family:'sans', size: Math.min(300, Math.max(16, Math.round(width/38))), bold: false, color:'#222222', lineHeight:1.5, spacing:0, padding:28, align:'center' } };
 }
 export function validateProject(input: unknown): Project {
  const fail = () => { throw new Error('プロジェクトの形式が正しくありません。'); };
