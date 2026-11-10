@@ -58,7 +58,7 @@ export async function readProject(file:File):Promise<Document>{
 const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
 export function artworkSVG(project:Project,image:string|null){
  const background=image?`<image href="${escape(image)}" width="${project.width}" height="${project.height}"/>`:'<rect width="100%" height="100%" fill="white"/>';
- const layers=project.balloons.map(b=>{const text=layoutText(b);return`<g transform="translate(${b.x} ${b.y})"><path d="${balloonPath(b)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${b.strokeWidth}" stroke-linejoin="round"/><g fill="${b.style.color}">${text.paths.map(g=>`<path d="${g.d}" transform="${g.transform}"/>`).join('')}</g></g>`;}).join('');
+ const layers=project.balloons.map(b=>{const text=layoutText(b);return`<g transform="translate(${b.x} ${b.y})">${b.kind==='text'?'':`<path d="${balloonPath(b)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${b.strokeWidth}" stroke-linejoin="round"/>`}<g fill="${b.style.color}">${text.paths.map(g=>`<path d="${g.d}" transform="${g.transform}"/>`).join('')}</g></g>`;}).join('');
  return`<svg xmlns="http://www.w3.org/2000/svg" width="${project.width}" height="${project.height}" viewBox="0 0 ${project.width} ${project.height}">${background}${layers}</svg>`;
 }
 export async function exportPNG(doc:Document):Promise<Blob>{

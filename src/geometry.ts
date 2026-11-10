@@ -14,6 +14,7 @@ export function boundary(kind: Balloon['kind'], point: Point, roundness=24): Poi
  return{x:.5+dx*lo,y:.5+dy*lo};
 }
 export function bodyContainsPoint(b:Balloon,point:Point):boolean {
+ if(b.kind==='text')return true;
  const x=Math.abs(point.x/b.width-.5),y=Math.abs(point.y/b.height-.5);
  if(b.kind==='ellipse')return Math.hypot(x,y)<=.5+1e-7;
  const radius=b.roundness/200,edge=.5-radius;
@@ -21,6 +22,7 @@ export function bodyContainsPoint(b:Balloon,point:Point):boolean {
 }
 const cache=new Map<string,string>();
 export function balloonPath(b: Balloon): string {
+ if(b.kind==='text')return '';
  const key=JSON.stringify([b.kind,b.width,b.height,b.roundness,b.tail]); const cached=cache.get(key); if(cached) return cached;
  const body=b.kind==='ellipse'?new scope.Path.Ellipse({rectangle:new scope.Rectangle(0,0,b.width,b.height),insert:false}):new scope.Path.Rectangle({rectangle:new scope.Rectangle(0,0,b.width,b.height),radius:new scope.Size(b.width*b.roundness/200,b.height*b.roundness/200),insert:false});
  let result: paper.PathItem=body;
