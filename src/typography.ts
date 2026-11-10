@@ -12,7 +12,7 @@ export async function ensureFont(family:'sans'|'serif'):Promise<void>{
  pending.set(family,task);try{await task;}finally{pending.delete(family);}
 }
 export function registerFont(family:string,data:Uint8Array){layoutCache.clear();const font=fontkit.create(data as never) as Font;fonts.set(family,font.getVariation({wght:400}));fonts.set(family+'-bold',font.getVariation({wght:700}));}
-export type GlyphPath={ d:string; transform:string };
+export type GlyphPath={ d:string; transform:string; scale:number };
 export type TextLayout={ paths:GlyphPath[]; overflow:boolean; requestedOverflow:boolean; outsideBody:boolean; warning:boolean; missing:boolean; effectiveSize:number; lineCount:number; bounds:{left:number;top:number;right:number;bottom:number}|null };
 const shapeCache=new Map<string,ReturnType<Font['layout']>>();
 const fontIds=new WeakMap<Font,number>();let nextFontId=0;
@@ -92,7 +92,7 @@ function computeText(b:Balloon):TextLayout{
       transform=`translate(${x} ${y}) scale(${scale} ${-scale})`;
       if(glyph.path.commands.length)include(x+box.minX*scale,y-box.maxY*scale,x+box.maxX*scale,y-box.minY*scale);
      }
-     if(emit)paths.push({d:glyph.path.toSVG(),transform});offset+=pos.xAdvance*scale;
+     if(emit)paths.push({d:glyph.path.toSVG(),transform,scale});offset+=pos.xAdvance*scale;
     });
     cursor+=token.advance*ratio;
    }

@@ -2,7 +2,9 @@ export type Point = { x: number; y: number };
 export type Tail = { enabled: boolean; a: Point; b: Point; p: Point };
 export type TextFrame = { x: number; y: number; width: number; height: number };
 export type OverflowMode = 'visible'|'warn'|'fit';
-export type TextStyle = { wrapMode:'manual'|'auto'; overflowMode: OverflowMode; direction: 'vertical'|'horizontal'; family: 'sans'|'serif'; size: number; bold: boolean; color: string; lineHeight: number; spacing: number; padding: number; align: 'start'|'center'|'end' };
+export type TextDecoration = { outline:{enabled:boolean;color:string;width:number};shadow:{enabled:boolean;color:string;x:number;y:number;blur:number} };
+export const defaultDecoration=():TextDecoration=>({outline:{enabled:false,color:'#ffffff',width:3},shadow:{enabled:false,color:'#000000',x:4,y:4,blur:4}});
+export type TextStyle = { decoration:TextDecoration; wrapMode:'manual'|'auto'; overflowMode: OverflowMode; direction: 'vertical'|'horizontal'; family: 'sans'|'serif'; size: number; bold: boolean; color: string; lineHeight: number; spacing: number; padding: number; align: 'start'|'center'|'end' };
 export type Balloon = { textFrame: TextFrame; roundness: number; id: string; kind: 'ellipse'|'rounded'|'text'; x: number; y: number; width: number; height: number; fill: string; stroke: string; strokeWidth: number; tail: Tail; text: string; style: TextStyle };
 export type Project = { id: string; version: 1; title: string; width: number; height: number; background: { path: string; mime: string; name: string } | null; balloons: Balloon[] };
 export type Document = { project: Project; image: string | null; bytes: Uint8Array | null };
@@ -14,7 +16,7 @@ export function defaultTextFrame(b: Pick<Balloon,'kind'|'width'|'height'>): Text
 }
 export function newBalloon(kind: Balloon['kind'], width: number, height: number, index: number): Balloon {
  const w = Math.max(40, Math.min(260, width * .28)), h = Math.max(40, Math.min(320, height * .28));
- const balloon: Omit<Balloon,'textFrame'> = { roundness:kind==='text'?0:24, id: uid(), kind, x: Math.max(0, width*.58 + index%3*16 - w/2), y: Math.max(0, height*.18 + index%4*22), width: w, height: h, fill: '#ffffff', stroke: '#222222', strokeWidth: Math.min(30, Math.max(2, width/450)), tail: { enabled: kind!=='text', a: {x:.54,y:.998}, b:{x:.73,y:.944}, p:{x:.86,y:1.34} }, text: 'ここに\nセリフを入力', style: { wrapMode:'manual', overflowMode:'visible', direction:'vertical', family:'sans', size: Math.min(300, Math.max(16, Math.round(width/38))), bold: false, color:'#222222', lineHeight:1.5, spacing:0, padding:kind==='text'?0:28, align:'center' } };
+ const balloon: Omit<Balloon,'textFrame'> = { roundness:kind==='text'?0:24, id: uid(), kind, x: Math.max(0, width*.58 + index%3*16 - w/2), y: Math.max(0, height*.18 + index%4*22), width: w, height: h, fill: '#ffffff', stroke: '#222222', strokeWidth: Math.min(30, Math.max(2, width/450)), tail: { enabled: kind!=='text', a: {x:.54,y:.998}, b:{x:.73,y:.944}, p:{x:.86,y:1.34} }, text: 'ここに\nセリフを入力', style: { decoration:defaultDecoration(), wrapMode:'manual', overflowMode:'visible', direction:'vertical', family:'sans', size: Math.min(300, Math.max(16, Math.round(width/38))), bold: false, color:'#222222', lineHeight:1.5, spacing:0, padding:kind==='text'?0:28, align:'center' } };
  return {...balloon,textFrame:defaultTextFrame(balloon)};
 }
 export function validateProject(input: unknown): Project {
@@ -40,6 +42,9 @@ export function validateProject(input: unknown): Project {
   const s=b.style;
   if(s && s.overflowMode===undefined)s.overflowMode='visible';
   if(s && s.wrapMode===undefined)s.wrapMode='auto';
+  if(s && s.decoration===undefined)s.decoration=defaultDecoration();
+  const decoration=s?.decoration,outline=decoration?.outline,shadow=decoration?.shadow;
+  if(!outline || typeof outline.enabled!=='boolean' || !color(outline.color) || !n(outline.width,0,30) || !shadow || typeof shadow.enabled!=='boolean' || !color(shadow.color) || !n(shadow.x,-500,500) || !n(shadow.y,-500,500) || !n(shadow.blur,0,50))return fail();
   if(!s || !['manual','auto'].includes(s.wrapMode) || !['visible','warn','fit'].includes(s.overflowMode) || !['vertical','horizontal'].includes(s.direction) || !['sans','serif'].includes(s.family) || !['start','center','end'].includes(s.align) || !n(s.size,6,300) || typeof s.bold!=='boolean' || !color(s.color) || !n(s.lineHeight,.8,3) || !n(s.spacing,-2,30) || !n(s.padding,0,300)) return fail();
  }
  return structuredClone(p);

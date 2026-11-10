@@ -3,6 +3,7 @@ import type { Document, Project } from './model';
 import { validateProject } from './model';
 import { ensureFont, layoutText } from './typography';
 import { balloonPath } from './geometry';
+import { textArtworkSVG } from './text-artwork';
 export function download(blob:Blob,name:string){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
 export function projectZip(doc:Document):Uint8Array{
  const files:Record<string,Uint8Array>={'project.json':strToU8(JSON.stringify(doc.project,null,2))};
@@ -58,7 +59,7 @@ export async function readProject(file:File):Promise<Document>{
 const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
 export function artworkSVG(project:Project,image:string|null){
  const background=image?`<image href="${escape(image)}" width="${project.width}" height="${project.height}"/>`:'<rect width="100%" height="100%" fill="white"/>';
- const layers=project.balloons.map(b=>{const text=layoutText(b);return`<g transform="translate(${b.x} ${b.y})">${b.kind==='text'?'':`<path d="${balloonPath(b)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${b.strokeWidth}" stroke-linejoin="round"/>`}<g fill="${b.style.color}">${text.paths.map(g=>`<path d="${g.d}" transform="${g.transform}"/>`).join('')}</g></g>`;}).join('');
+ const layers=project.balloons.map(b=>{return`<g transform="translate(${b.x} ${b.y})">${b.kind==='text'?'':`<path d="${balloonPath(b)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${b.strokeWidth}" stroke-linejoin="round"/>`}${textArtworkSVG(b)}</g>`;}).join('');
  return`<svg xmlns="http://www.w3.org/2000/svg" width="${project.width}" height="${project.height}" viewBox="0 0 ${project.width} ${project.height}">${background}${layers}</svg>`;
 }
 export async function exportPNG(doc:Document):Promise<Blob>{
