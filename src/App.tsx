@@ -19,6 +19,7 @@ import{moveClip,resizeClip}from'./clipping';
 import type{ClipCorner}from'./clipping';
 import {PropertiesPanel} from './PropertiesPanel';
 import{APP_VERSION}from'./version';
+import{creationCenter,placeAtCenter}from'./creation';
 import './style.css';
 const initial = emptyDocument();
 const signature=(p:Project)=>JSON.stringify(p);
@@ -58,7 +59,10 @@ export default function App(){
  useEffect(()=>{let cancelled=false;ensureFont('sans').then(()=>{if(!cancelled){setFontRevision(v=>v+1);setFontLoading(false);}}).catch(e=>{if(!cancelled){setFontLoading(false);setError(e.message);}});return()=>{cancelled=true;};},[]);
  useEffect(()=>{const handler=(event:BeforeUnloadEvent)=>{if(dirty){event.preventDefault();}};window.addEventListener('beforeunload',handler);return()=>window.removeEventListener('beforeunload',handler);},[dirty]);
  useEffect(()=>{if(!notice)return;const id=setTimeout(()=>setNotice(''),4500);return()=>clearTimeout(id);},[notice]);
- const add=(kind:Balloon['kind'])=>{if(!doc.image){setNotice('最初に漫画画像を読み込むか、サンプルを開いてください。');return;}if(doc.project.balloons.length>=200){setError('オブジェクトは200個まで配置できます。');return;}const item=newBalloon(kind,doc.project.width,doc.project.height,doc.project.balloons.length);apply({...doc.project,balloons:[...doc.project.balloons,item]});setSelected(item.id);setMode('select');if(innerWidth<1100)setPanel('properties');};
+ const add=(kind:Balloon['kind'])=>{if(!doc.image){setNotice('最初に漫画画像を読み込むか、サンプルを開いてください。');return;}if(doc.project.balloons.length>=200){setError('オブジェクトは200個まで配置できます。');return;}const page=doc.project,pane=viewport.current,svg=svgRef.current;
+ let center={x:page.width/2,y:page.height/2};
+ if(pane&&svg){const bounds=pane.getBoundingClientRect(),paper=svg.getBoundingClientRect();center=creationCenter({left:bounds.left+(pane.clientLeft||0),top:bounds.top+(pane.clientTop||0),width:pane.clientWidth,height:pane.clientHeight},{x:paper.left,y:paper.top},zoom,page);}
+ const item=placeAtCenter(newBalloon(kind,page.width,page.height,0),center);apply({...doc.project,balloons:[...doc.project.balloons,item]});setSelected(item.id);setMode('select');if(innerWidth<1100)setPanel('properties');};
  const guard=()=>!dirty||window.confirm('未保存の変更があります。保存せずに別の原稿を開きますか？');
  const run=async(label:string,task:()=>Promise<void>)=>{setBusy(label);setError('');try{await task();}catch(e){setError(e instanceof Error?e.message:'処理に失敗しました。現在の編集内容は保持されています。');}finally{setBusy('');}};
  const replace=(next:ComicDocument,isSaved:boolean)=>{ref.current=next;setDoc(next);history.current={past:[],future:[]};setSelected(null);setSaved(isSaved?signature(next.project):'');refresh(v=>v+1);setPanel(null);};

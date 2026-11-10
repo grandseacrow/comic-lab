@@ -3,6 +3,7 @@ import{create,act}from'react-test-renderer';
 import type{ReactTestRenderer,ReactTestInstance}from'react-test-renderer';
 import{readFileSync}from'node:fs';
 import App from'../src/App';
+import{APP_VERSION}from'../src/version';
 import{registerFont}from'../src/typography';
 import{download}from'../src/io';
 vi.mock('../src/io',async importOriginal=>({...await importOriginal<typeof import('../src/io')>(),download:vi.fn(),decodeImage:vi.fn(async()=>({mime:'image/png',url:'data:image/png;base64,background',width:1000,height:1400}))}));
@@ -26,7 +27,7 @@ it('saves and reloads edited jagged and dragged clip values through the actual A
  const viewport=()=>renderer.root.findAllByType('div').find(n=>typeof n.props.className==='string'&&n.props.className.startsWith('canvas-viewport'))!;
  await act(async()=>viewport().props.onPointerMove({clientX:465*zoom,clientY:382*zoom}));await act(async()=>viewport().props.onPointerUp());
  const before=artwork();await click('セリフ設定をJSON保存');expect(download).toHaveBeenCalledTimes(1);
- expect(vi.mocked(download).mock.calls[0][1]).toBe('comic-lab-dialogues-v1.51.json');
+ expect(vi.mocked(download).mock.calls[0][1]).toBe(`comic-lab-dialogues-v${APP_VERSION}.json`);
  const [blob]=vi.mocked(download).mock.calls[0];const json=await blob.text(),raw=JSON.parse(json),b=raw.balloons[0];
  expect(b.kind).toBe('zigzag');expect(b.zigzag).toEqual({count:31,depth:.39,sharpness:.92});expect(b.clip.enabled).toBe(true);expect(b.clip.x).toBe(110);expect(b.clip.y).toBe(130);expect(b.clip.width).toBeCloseTo(355);expect(b.clip.height).toBeCloseTo(252);
  await click('削除');expect(artwork()).toEqual([]);
