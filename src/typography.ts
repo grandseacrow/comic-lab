@@ -1,5 +1,6 @@
 import * as fontkit from 'fontkit';
 import type { Balloon } from './model';
+import {textPointToBody} from './transforms';
 import { bodyContainsPoint } from './geometry';
 type Font = fontkit.Font;
 const fonts=new Map<string,Font>();
@@ -28,7 +29,7 @@ const chars=(text:string)=>Array.from(segmenter.segment(text),x=>x.segment);
 const noStart=/^[、。，．！？!?）］｝〉》」』】ぁぃぅぇぉっゃゅょァィゥェォッャュョー]/;
 const noEnd=/^[（［｛〈《「『【]/;
 export function layoutText(b:Balloon):TextLayout{
- const key=JSON.stringify([b.text,b.style,b.textFrame,b.kind,b.width,b.height,b.roundness]);
+ const key=JSON.stringify([b.text,b.style,b.textFrame,b.kind,b.width,b.height,b.roundness,b.bodyRotation,b.textRotation,b.zigzag]);
  const cached=layoutCache.get(key);if(cached)return cached;
  const result=computeText(b);
  if(fonts.has(b.style.family)){if(layoutCache.size>=200)layoutCache.clear();layoutCache.set(key,result);}
@@ -69,7 +70,7 @@ function computeText(b:Balloon):TextLayout{
   let overflow=extent>(vertical?innerW:innerH)+.1,missing=false;
   const paths:GlyphPath[]=[];
   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-  const include=(x1:number,y1:number,x2:number,y2:number)=>{if(![{x:x1,y:y1},{x:x1,y:y2},{x:x2,y:y1},{x:x2,y:y2}].every(p=>bodyContainsPoint(b,p)))outsideBody=true;minX=Math.min(minX,x1);minY=Math.min(minY,y1);maxX=Math.max(maxX,x2);maxY=Math.max(maxY,y2);};
+  const include=(x1:number,y1:number,x2:number,y2:number)=>{if(![{x:x1,y:y1},{x:x1,y:y2},{x:x2,y:y1},{x:x2,y:y2}].every(p=>bodyContainsPoint(b,textPointToBody(b,p))))outsideBody=true;minX=Math.min(minX,x1);minY=Math.min(minY,y1);maxX=Math.max(maxX,x2);maxY=Math.max(maxY,y2);};
   lines.forEach((line,lineIndex)=>{
    const length=Math.max(0,line.reduce((a,t)=>a+t.advance*ratio,0)-spacing);
    if(length>limit+.1)overflow=true;

@@ -1,0 +1,16 @@
+import type {PointerEvent} from 'react';
+import type {Balloon} from './model';
+import type {EditTarget} from './editing';
+import{bodyTransform,textTransform}from'./transforms';
+import{boundaryPoint}from'./geometry';
+export type DragAction='move'|'resize'|'text-move'|'text-resize'|'a'|'b'|'p'|'rotate'|'clip-move'|'clip-nw'|'clip-ne'|'clip-sw'|'clip-se';
+export function SelectionOverlay({b,zoom,target,textEditing,clipEditing,onStart}:{b:Balloon;zoom:number;target:EditTarget;textEditing:boolean;clipEditing?:boolean;onStart:(e:PointerEvent,type:DragAction)=>void}){
+ const f=b.textFrame,isText=b.kind==='text'||target==='text';
+ const handle=(x:number,y:number,type:DragAction,label:string)=><rect x={x-5/zoom} y={y-5/zoom} width={10/zoom} height={10/zoom} fill="white" stroke="#527464" strokeWidth={1.3/zoom} className="resize-handle" aria-label={label} onPointerDown={e=>onStart(e,type)}/>;
+ const rotation=(x:number,y:number)=><g><path d={`M${x} ${y}v${-25/zoom}`} stroke="#71876b" strokeWidth={1/zoom} pointerEvents="none"/><circle cx={x} cy={y-25/zoom} r={6/zoom} fill="white" stroke="#527464" strokeWidth={1.5/zoom} className="rotation-handle" aria-label="回転ハンドル" onPointerDown={e=>onStart(e,'rotate')}/></g>;
+ if(clipEditing&&b.clip.enabled&&b.kind!=='text'){const c=b.clip;return <g className="clip-edit-guide"><rect x={c.x} y={c.y} width={c.width} height={c.height} fill="none" stroke="#a87940" strokeWidth={1.5/zoom} strokeDasharray={`${5/zoom} ${4/zoom}`} pointerEvents="all" onPointerDown={e=>onStart(e,'clip-move')} aria-label="クリッピング範囲を移動"/>{handle(c.x,c.y,'clip-nw','クリップ左上')}{handle(c.x+c.width,c.y,'clip-ne','クリップ右上')}{handle(c.x,c.y+c.height,'clip-sw','クリップ左下')}{handle(c.x+c.width,c.y+c.height,'clip-se','クリップ右下')}</g>;}
+ return <>
+ {!isText&&<g transform={bodyTransform(b)} className="selection"><rect width={b.width} height={b.height} fill="none" stroke="#527464" strokeWidth={1.3/zoom} strokeDasharray={`${4/zoom} ${3/zoom}`} pointerEvents="none"/>{handle(b.width,b.height,'resize','吹き出しのサイズ変更')}{rotation(b.width/2,0)}{b.tail.enabled&&<><path d={`M${boundaryPoint(b,b.tail.a).x*b.width} ${boundaryPoint(b,b.tail.a).y*b.height} L${b.tail.p.x*b.width} ${b.tail.p.y*b.height} L${boundaryPoint(b,b.tail.b).x*b.width} ${boundaryPoint(b,b.tail.b).y*b.height}`} fill="none" stroke="#db9856" strokeWidth={1/zoom} strokeDasharray={`${3/zoom} ${3/zoom}`} pointerEvents="none"/>{(['a','b','p']as const).map(name=>{const p=name==='p'?b.tail.p:boundaryPoint(b,b.tail[name]);return <g key={name}><circle cx={p.x*b.width} cy={p.y*b.height} r={6/zoom} fill={name==='p'?'#db9856':'white'} stroke="#b87b3e" strokeWidth={1.5/zoom} onPointerDown={e=>onStart(e,name)} aria-label={`しっぽ制御点${name.toUpperCase()}`} className="tail-handle"/><text x={p.x*b.width+9/zoom} y={p.y*b.height+4/zoom} fontSize={10/zoom} fill="#9d672c" pointerEvents="none">{name.toUpperCase()}</text></g>;})}</>}</g>}
+ {(isText||textEditing)&&<g transform={textTransform(b)} className="text-edit-guide"><rect x={f.x} y={f.y} width={f.width} height={f.height} fill="none" stroke="#92a490" strokeWidth={1/zoom} strokeDasharray={`${2/zoom} ${4/zoom}`} pointerEvents="all" aria-label="文字枠を移動" onPointerDown={e=>onStart(e,'text-move')}/>{handle(f.x+f.width,f.y+f.height,'text-resize','文字枠のサイズ変更')}{isText&&rotation(f.x+f.width/2,f.y)}</g>}
+ </>;
+}

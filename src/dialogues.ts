@@ -25,7 +25,7 @@ export function parseDialoguesJSON(text:string):DialoguesData{
  const ids=new Set<string>();
  data.balloons.forEach((item,i)=>{
   if(!item||typeof item!=='object'||Array.isArray(item))throw new Error(`オブジェクト${i+1}のデータが不正です。`);
-  if(!['ellipse','rounded','text'].includes(item.kind))throw new Error(`オブジェクト${i+1}の種類に対応していません。`);
+  if(!['ellipse','rounded','text','zigzag'].includes(item.kind))throw new Error(`オブジェクト${i+1}の種類に対応していません。`);
   for(const field of ['id','x','y','width','height','text','style','tail','fill','stroke','strokeWidth'])if(!Object.hasOwn(item,field))throw new Error(`オブジェクト${i+1}に必須項目「${field}」がありません。`);
   if(typeof item.id==='string'){if(ids.has(item.id))throw new Error('オブジェクトIDが重複しています。');ids.add(item.id);}
  });
@@ -40,6 +40,7 @@ export function applyDialogues(project:Project,data:DialoguesData,sizing:ImportS
   const sx=project.width/data.width,sy=project.height/data.height,s=Math.sqrt(sx*sy);
   for(const b of balloons){
    b.x*=sx;b.y*=sy;b.width*=sx;b.height*=sy;
+   b.clip.x*=sx;b.clip.y*=sy;b.clip.width*=sx;b.clip.height*=sy;
    b.textFrame.x*=sx;b.textFrame.y*=sy;b.textFrame.width*=sx;b.textFrame.height*=sy;
    b.strokeWidth*=s;b.style.size*=s;b.style.spacing*=s;b.style.padding*=s;
    b.style.decoration.outline.width*=s;
