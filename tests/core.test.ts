@@ -1,0 +1,29 @@
+import { describe, it, expect, beforeAll } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { emptyDocument, newBalloon, validateProject } from '../src/model';
+import { boundary, balloonPath } from '../src/geometry';
+import { registerFont, layoutText } from '../src/typography';
+import { artworkSVG, detectMime, projectZip, unzipBounded } from '../src/io';
+import { strFromU8, strToU8, zipSync } from 'fflate';
+beforeAll(()=>{registerFont('sans',readFileSync('public/fonts/NotoSansJP.ttf'));registerFont('serif',readFileSync('public/fonts/NotoSerifJP.ttf'));});
+describe('original manuscript coordinates',()=>{
+ it('supports five independent balloons and all tail points',()=>{const doc=emptyDocument();doc.project.balloons=Array.from({length:5},(_,i)=>newBalloon('ellipse',1000,1400,i));const p=validateProject(doc.project);expect(new Set(p.balloons.map(b=>b.id)).size).toBe(5);p.balloons[0].tail.p.x=-.5;expect(doc.project.balloons[0].tail.p.x).toBe(.86);});
+ it('projects bases to an ellipse or rounded rectangle in all directions',()=>{for(const kind of ['ellipse','rounded'] as const)for(const pt of [{x:.5,y:3},{x:-2,y:-2},{x:2,y:.5}]){const b=boundary(kind,pt);expect(b.x).toBeGreaterThanOrEqual(0);expect(b.x).toBeLessThanOrEqual(1);expect(b.y).toBeGreaterThanOrEqual(0);expect(b.y).toBeLessThanOrEqual(1);if(kind==='ellipse')expect(Math.hypot(b.x-.5,b.y-.5)).toBeCloseTo(.5);}});
+ it('unites body and tail into one outline with no internal boundary',()=>{for(const kind of ['ellipse','rounded'] as const){const b=newBalloon(kind,1000,1400,0);b.tail.enabled=true;expect(balloonPath(b).match(/m/gi)).toHaveLength(1);b.tail.p={x:-1,y:.5};b.tail.a={x:0,y:.4};b.tail.b={x:0,y:.6};expect(balloonPath(b).match(/m/gi)).toHaveLength(1);b.tail.enabled=false;expect(balloonPath(b)).not.toContain('NaN');}});
+});
+describe('Japanese outlined typography',()=>{
+ it('uses vertical punctuation variants and preserves Japanese glyphs',()=>{const b=newBalloon('rounded',1000,1400,0);b.width=600;b.height=900;b.text='「こんにちは。」\n小さなゃゅょ、ー！AI2026';b.style.size=24;for(const family of ['sans','serif'] as const){b.style.family=family;const v=layoutText(b);expect(v.paths.length).toBeGreaterThan(15);expect(v.missing).toBe(false);expect(v.overflow).toBe(false);const punctuation=newBalloon('rounded',1000,1400,0);punctuation.text='「';const vertical=layoutText(punctuation).paths[0].d;punctuation.style.direction='horizontal';expect(layoutText(punctuation).paths[0].d).not.toEqual(vertical);}});
+ it('has independent normal and bold outlines',()=>{const b=newBalloon('ellipse',1000,1400,0);b.text='言葉';const normal=layoutText(b).paths[0].d;b.style.bold=true;expect(layoutText(b).paths[0].d).not.toEqual(normal);});
+ it('warns on overflow without silently reducing font size',()=>{const b=newBalloon('ellipse',1000,1400,0);b.text='長いセリフ'.repeat(100);const size=b.style.size;expect(layoutText(b).overflow).toBe(true);expect(b.style.size).toBe(size);});
+ it('keeps manual lines in both orientations',()=>{const b=newBalloon('rounded',1000,1400,0);b.text='あ\nい';let glyphs=layoutText(b).paths;expect(glyphs[0].transform).not.toEqual(glyphs[1].transform);b.style.direction='horizontal';glyphs=layoutText(b).paths;expect(glyphs[0].transform).not.toEqual(glyphs[1].transform);});
+});
+describe('project archive and data validation',()=>{
+ it('round-trips the original image bytes and all editable properties',async()=>{const doc=emptyDocument();doc.project.background={path:'assets/background.png',mime:'image/png',name:'original.png'};doc.bytes=new Uint8Array([137,80,78,71,1,2,3,4]);doc.project.balloons=Array.from({length:5},(_,i)=>newBalloon(i%2?'ellipse':'rounded',1000,1400,i));const bytes=projectZip(doc);const unzipped=await unzipBounded(bytes);expect(unzipped['assets/background.png']).toEqual(doc.bytes);expect(validateProject(JSON.parse(strFromU8(unzipped['project.json'])))).toEqual(doc.project);});
+ it('rejects invalid versions, duplicate IDs, invalid colors, and infinite coordinates',()=>{for(const mutate of [(p:any)=>p.version=2,(p:any)=>p.balloons[0].x=Infinity,(p:any)=>p.balloons[0].fill='url(javascript:evil)',(p:any)=>p.balloons.push(p.balloons[0]),(p:any)=>p.background={path:'../evil',mime:'image/png',name:'evil'}]){const doc=emptyDocument();doc.project.balloons=[newBalloon('ellipse',1000,1400,0)];mutate(doc.project);expect(()=>validateProject(doc.project)).toThrow();}});
+ it('rejects unexpected or unsafe ZIP paths',async()=>{await expect(unzipBounded(zipSync({'../evil':strToU8('oops')}))).rejects.toThrow();await expect(unzipBounded(zipSync({'run.js':strToU8('oops')}))).rejects.toThrow();});
+ it('rejects too many archive entries',async()=>{const files=Object.fromEntries(Array.from({length:11},(_,i)=>[`assets/f${i}.png`,new Uint8Array(1)]));await expect(unzipBounded(zipSync(files))).rejects.toThrow();});
+ it('accepts only raster image signatures',()=>{expect(detectMime(new Uint8Array([137,80,78,71]))).toBe('image/png');expect(detectMime(new Uint8Array([255,216,255]))).toBe('image/jpeg');expect(()=>detectMime(strToU8('<svg onload="evil()"/>'))).toThrow();});
+});
+describe('shared artwork export',()=>{
+ it('retains original pixel size and contains paths, not external fonts or editor handles',()=>{const doc=emptyDocument();doc.project.width=1234;doc.project.height=1745;const b=newBalloon('ellipse',1234,1745,0);b.text='日本語、縦書き。';doc.project.balloons=[b];const svg=artworkSVG(doc.project,null);expect(svg).toContain('width="1234" height="1745"');expect(svg).toContain(balloonPath(b));for(const glyph of layoutText(b).paths)expect(svg).toContain(glyph.d);expect(svg).not.toContain('<text');expect(svg).not.toMatch(/selection|handle|font-family|foreignObject/);});
+});
