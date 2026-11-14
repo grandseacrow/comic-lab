@@ -1,5 +1,7 @@
+export type ImageAsset={id:string;path:string;name:string;mime:string;width:number;height:number};
+export type PanelImage={assetId:string;offsetX:number;offsetY:number;scale:number;fitMode:'cover'|'contain';width:number;height:number};
 export type PanelPoint=[number,number];
-export type Panel={id:string;kind:'normal';shape:'polygon';points:[PanelPoint,PanelPoint,PanelPoint,PanelPoint];order:number;borderVisible:boolean;borderColor:string;borderWidth:number;assetId:string|null;editing:{locked:boolean}};
+export type Panel={image?:PanelImage|null;id:string;kind:'normal';shape:'polygon';points:[PanelPoint,PanelPoint,PanelPoint,PanelPoint];order:number;borderVisible:boolean;borderColor:string;borderWidth:number;assetId:string|null;editing:{locked:boolean}};
 export const PAGE_PRESETS=[{id:'portrait',label:'縦長',width:1200,height:1800},{id:'square',label:'正方形',width:1200,height:1200},{id:'landscape',label:'横長',width:1800,height:1200}]as const;
 export const PANEL_TEMPLATES=[{id:'two-horizontal',label:'2コマ・横分割（上下）',rows:2,cols:1},{id:'two-vertical',label:'2コマ・縦分割（左右）',rows:1,cols:2},{id:'four-vertical',label:'4コマ・縦並び',rows:4,cols:1},{id:'four-grid',label:'4コマ・2×2',rows:2,cols:2},{id:'blank',label:'空白ページ',rows:0,cols:0}]as const;
 export type TemplateId=typeof PANEL_TEMPLATES[number]['id'];
@@ -20,6 +22,18 @@ export function validatePageData(settings:unknown,panels:unknown,width:number,he
   ids.add(b.id);orders.add(b.order);
   for(const point of b.points)if(!Array.isArray(point)||point.length!==2||!n(point[0],0,width)||!n(point[1],0,height))fail('コマの頂点が原稿の範囲外です。');
   const [[x,y],[right,y2],[right2,bottom],[x2,bottom2]]=b.points;
-  if(x!==x2||right!==right2||y!==y2||bottom!==bottom2||right-x<MIN_PANEL_SIZE||bottom-y<MIN_PANEL_SIZE)fail('alpha.1では最小40pxの長方形コマを使用してください。');
+  if(x!==x2||right!==right2||y!==y2||bottom!==bottom2||right-x<MIN_PANEL_SIZE||bottom-y<MIN_PANEL_SIZE)fail('現在は最小40pxの長方形コマを使用してください。');
  }
+}
+
+export function validateImageAssets(assets:unknown,panels:Panel[]):void{
+ const fail=():never=>{throw Error('コマ画像の素材参照・位置・倍率が不正です。');};
+ if(assets!==undefined&&(!Array.isArray(assets)||assets.length>100))fail();
+ const catalog=new Map<string,ImageAsset>(),paths=new Set<string>();
+ const n=(v:unknown,min:number,max:number)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
+ for(const a of (assets??[])as ImageAsset[]){
+  if(!a||typeof a.id!=='string'||!/^[a-zA-Z0-9_-]{1,100}$/.test(a.id)||catalog.has(a.id)||typeof a.name!=='string'||a.name.length>255||!['image/png','image/jpeg','image/webp'].includes(a.mime)||a.path!==`assets/images/${a.id}.${a.mime==='image/jpeg'?'jpg':a.mime==='image/webp'?'webp':'png'}`||paths.has(a.path)||!Number.isInteger(a.width)||!Number.isInteger(a.height)||!n(a.width,1,20000)||!n(a.height,1,20000)||a.width*a.height>20_000_000)fail();
+  catalog.set(a.id,a);paths.add(a.path);
+ }
+ for(const p of panels){const i=p.image;if(i===undefined||i===null)continue;const a=catalog.get(i.assetId);if(!a||i.width!==a.width||i.height!==a.height||!n(i.offsetX,-40_000_000,40_000_000)||!n(i.offsetY,-40_000_000,40_000_000)||!n(i.scale,.001,20000)||!['cover','contain'].includes(i.fitMode))fail();}
 }

@@ -21,6 +21,7 @@ import {PropertiesPanel} from './PropertiesPanel';
 import{APP_VERSION}from'./version';
 import{creationCenter,placeAtCenter}from'./creation';
 import {isPageProject} from './model';
+import {panelImagesSVG,pruneImageAssets,moveImage,attachPanelImage,newImageAsset,findReusableAsset,checkResourceBudget} from './panel-images';
 import {newPageDocument} from './page-project';
 import {PanelLayer} from './PanelLayer';
 import {PanelProperties} from './PanelProperties';
@@ -36,7 +37,11 @@ export default function App(){
  const [doc,setDoc]=useState<ComicDocument>(initial),ref=useRef(doc);ref.current=doc;
  const [selected,setSelected]=useState<string|null>(null),[zoom,setZoom]=useState(.5),[mode,setMode]=useState<'select'|'pan'>('select');
  const [selectedPanel,setSelectedPanel]=useState<string|null>(null),[objectTool,setObjectTool]=useState<'dialogue'|'panel'>('dialogue'),[newPageOpen,setNewPageOpen]=useState(false);
- const panelDrag=useRef<{id:string;type:'move'|PanelCorner;start:Point;original:Panel;changed:boolean}|null>(null);
+ const panelDrag=useRef<{id:string;type:'move'|'image-move'|PanelCorner;start:Point;original:Panel;changed:boolean}|null>(null);
+ const [panelImageEditing,setPanelImageEditing]=useState(false);
+ const imageSelection=useRef({id:selectedPanel,epoch:0});if(imageSelection.current.id!==selectedPanel){imageSelection.current={id:selectedPanel,epoch:imageSelection.current.epoch+1};}
+ useEffect(()=>setPanelImageEditing(false),[selectedPanel]);
+ const panelImageInput=useRef<HTMLInputElement>(null),imageRequest=useRef(0);
  const hasDocument=!!doc.image||isPageProject(doc.project);
  const selectedFrame=doc.project.panels?.find(p=>p.id===selectedPanel);
  const selectBalloon=(id:string|null)=>{setSelected(id);setSelectedPanel(null);if(id)setObjectTool('dialogue');};
@@ -57,7 +62,7 @@ export default function App(){
  const b=doc.project.balloons.find(item=>item.id===selected);
  const textEditing=!!b&&(b.kind==='text'||editTarget==='text'||textFocused);
  const pushHistory=(p:Project)=>{recordHistory(history.current,p);refresh(v=>v+1);};
- const apply=(project:Project,record=true)=>{if(signature(project)===signature(ref.current.project))return;try{if(isPageProject(project))validateProject(project);for(const item of project.balloons)if(ref.current.project.balloons.find(b=>b.id===item.id)!==item)validateProject({...project,balloons:[item]});}catch{setError('操作後の座標・サイズが対応範囲を超えるため、変更を適用しませんでした。');return;}if(record)pushHistory(ref.current.project);const next={...ref.current,project};ref.current=next;setDoc(next);};
+ const apply=(project:Project,record=true)=>{project=pruneImageAssets(project);if(signature(project)===signature(ref.current.project))return;try{if(isPageProject(project))validateProject(project);for(const item of project.balloons)if(ref.current.project.balloons.find(b=>b.id===item.id)!==item)validateProject({...project,balloons:[item]});}catch{setError('操作後の座標・サイズが対応範囲を超えるため、変更を適用しませんでした。');return;}if(record)pushHistory(ref.current.project);const next={...ref.current,project};ref.current=next;setDoc(next);};
  const update=(patch:Partial<Balloon>,record=true)=>{const current=ref.current.project;apply({...current,balloons:current.balloons.map(item=>item.id===selected?{...item,...patch}:item)},record);};
  const style=(patch:Partial<TextStyle>)=>{if(b)update({style:{...b.style,...patch}});};
  const outline=(patch:Partial<TextDecoration['outline']>)=>{if(b)style({decoration:{...b.style.decoration,outline:{...b.style.decoration.outline,...patch}}});};
@@ -80,6 +85,20 @@ export default function App(){
  const run=async(label:string,task:()=>Promise<void>)=>{setBusy(label);setError('');try{await task();}catch(e){setError(e instanceof Error?e.message:'処理に失敗しました。現在の編集内容は保持されています。');}finally{setBusy('');}};
  const replace=(next:ComicDocument,isSaved:boolean)=>{ref.current=next;setDoc(next);history.current={past:[],future:[]};selectBalloon(null);setSaved(isSaved?signature(next.project):'');refresh(v=>v+1);setPanel(null);setObjectTool('dialogue');};
  const importImage=async(file:File)=>{if(!guard())return;await run('画像を読み込み中',async()=>{if(file.size>50*1024*1024)throw new Error('画像は50MB以下にしてください。');const bytes=new Uint8Array(await file.arrayBuffer()),image=await decodeImage(bytes);const ext=image.mime==='image/jpeg'?'jpg':image.mime==='image/webp'?'webp':'png';const p:Project={id:uid(),version:1,title:file.name.replace(/\.[^.]+$/,'').slice(0,200),width:image.width,height:image.height,background:{path:`assets/background.${ext}`,mime:image.mime,name:file.name},balloons:[]};replace({project:p,image:image.url,bytes},false);setNotice('画像を読み込みました。吹き出しを追加しましょう。');});};
+ const importPanelImage=async(file:File)=>{
+  const project=ref.current.project,panelId=selectedPanel,epoch=imageSelection.current.epoch,request=++imageRequest.current;
+  if(!panelId||!isPageProject(project))return;
+  await run('コマ画像を読み込み中',async()=>{
+   if(file.size>40*1024*1024)throw Error('コマ画像は40MB以下にしてください。');
+   const bytes=new Uint8Array(await file.arrayBuffer()),decoded=await decodeImage(bytes);
+   if(ref.current.project.id!==project.id||imageSelection.current.id!==panelId||imageSelection.current.epoch!==epoch||request!==imageRequest.current)throw Error('読込中に選択コマや原稿が変わったため、画像の配置を中止しました。');
+   const current=ref.current,resources=current.assets??{},existing=findReusableAsset(current.project,resources,bytes),asset=existing??newImageAsset(file.name,decoded);
+   if(!existing)checkResourceBudget(current,bytes.length,decoded.width*decoded.height);
+   const next=attachPanelImage(current.project,panelId,asset);
+   // Keep immutable image bytes outside Project snapshots so undo/redo retains old sources.
+   const withResource={...current,assets:{...resources,[asset.id]:{bytes,url:decoded.url,pixels:decoded.width*decoded.height}}};ref.current=withResource;setDoc(withResource);apply(next);setNotice('コマに画像を配置しました。');
+  });
+ };
  const importProject=async(file:File)=>{if(!guard())return;await run('プロジェクトを復元中',async()=>{const next=await readProject(file);replace(next,true);setFontRevision(v=>v+1);setNotice('プロジェクトを復元しました。');});};
  const save=()=>run('プロジェクトを保存中',async()=>{const current=ref.current;download(new Blob([projectZip(current) as BlobPart],{type:'application/zip'}),`${current.project.title||'comic-lab'}-project.zip`);setSaved(signature(current.project));setNotice('プロジェクトをZIPに保存しました。');});
  const exportImage=()=>run('PNGを書き出し中',async()=>{const current=ref.current;const result=await exportPNG(current);download(result,`${current.project.title||'comic-lab'}.png`);setNotice(`${current.project.width} × ${current.project.height}pxでPNGを書き出しました。`);});
@@ -121,10 +140,10 @@ export default function App(){
  });
  const point=(event:ReactPointerEvent):Point=>{const rect=svgRef.current!.getBoundingClientRect();return{x:(event.clientX-rect.left)/zoom,y:(event.clientY-rect.top)/zoom};};
  const start=(event:ReactPointerEvent,type:DragAction,item:Balloon)=>{if(objectTool==='panel'||mode==='pan'||space.current)return;event.preventDefault();event.stopPropagation();const target=item.kind==='text'?'text':editTarget;selectBalloon(item.id);if(item.kind==='text'&&type==='move')type='text-move';if(type==='move'&&target==='text')return;if(item.kind!=='text')setEditTarget(type==='text-move'||type==='text-resize'?'text':target);event.currentTarget.setPointerCapture(event.pointerId);drag.current={type,target,id:item.id,start:point(event),original:structuredClone(item),changed:false};};
- const startPanel=(event:ReactPointerEvent,type:'move'|PanelCorner,item:Panel)=>{if(mode==='pan'||space.current)return;event.preventDefault();event.stopPropagation();setSelected(null);setSelectedPanel(item.id);setObjectTool('panel');event.currentTarget.setPointerCapture(event.pointerId);panelDrag.current={id:item.id,type,start:point(event),original:structuredClone(item),changed:false};};
+ const startPanel=(event:ReactPointerEvent,type:'move'|PanelCorner,item:Panel)=>{if(mode==='pan'||space.current)return;event.preventDefault();event.stopPropagation();setSelected(null);setSelectedPanel(item.id);setObjectTool('panel');event.currentTarget.setPointerCapture(event.pointerId);panelDrag.current={id:item.id,type:type==='move'&&selectedPanel===item.id&&panelImageEditing&&item.image?'image-move':type,start:point(event),original:structuredClone(item),changed:false};};
  const addFrame=()=>{try{const p=ref.current.project,pane=viewport.current,svg=svgRef.current;let center={x:p.width/2,y:p.height/2};if(pane&&svg){const r=pane.getBoundingClientRect(),s=svg.getBoundingClientRect();center=creationCenter({left:r.left+(pane.clientLeft||0),top:r.top+(pane.clientTop||0),width:pane.clientWidth,height:pane.clientHeight},{x:s.left,y:s.top},zoom,p);}const next=addPanel(p,center);apply(next);setSelected(null);setSelectedPanel(next.panels!.at(-1)!.id);setObjectTool('panel');setMode('select');}catch(e){setError((e as Error).message);}};
  const pageAction=(task:()=>Project)=>{try{apply(task());setSelectedPanel(null);}catch(e){setError((e as Error).message);}};
- const move=(event:ReactPointerEvent)=>{const pd=panelDrag.current;if(pd){const pt=point(event),dx=pt.x-pd.start.x,dy=pt.y-pd.start.y,p=ref.current.project;const changed=pd.type==='move'?movePanel(pd.original,dx,dy,p):resizePanel(pd.original,pd.type,dx,dy,p);if(JSON.stringify(changed)===JSON.stringify(p.panels?.find(f=>f.id===pd.id)))return;if(!pd.changed){pushHistory(p);pd.changed=true;}apply({...p,panels:p.panels!.map(f=>f.id===pd.id?changed:f)},false);return;}const d=drag.current;if(!d)return;
+ const move=(event:ReactPointerEvent)=>{const pd=panelDrag.current;if(pd){const pt=point(event),dx=pt.x-pd.start.x,dy=pt.y-pd.start.y,p=ref.current.project;const changed=pd.type==='image-move'?moveImage(pd.original,dx,dy):pd.type==='move'?movePanel(pd.original,dx,dy,p):resizePanel(pd.original,pd.type,dx,dy,p);if(JSON.stringify(changed)===JSON.stringify(p.panels?.find(f=>f.id===pd.id)))return;if(!pd.changed){pushHistory(p);pd.changed=true;}apply({...p,panels:p.panels!.map(f=>f.id===pd.id?changed:f)},false);return;}const d=drag.current;if(!d)return;
  if(d.type==='pan'){viewport.current!.scrollLeft=d.scroll!.x-(event.clientX-d.start.x);viewport.current!.scrollTop=d.scroll!.y-(event.clientY-d.start.y);return;}
  const pt=point(event),dx=pt.x-d.start.x,dy=pt.y-d.start.y,original=d.original!;let changed=structuredClone(original);
  if(d.type==='clip-move')changed=moveClip(original,dx,dy);
@@ -151,6 +170,7 @@ export default function App(){
  const overflowCount=doc.project.balloons.filter(item=>layoutText(item).warning).length;
 
  return <div className="app" data-font-revision={fontRevision}>
+ <input ref={panelImageInput} className="hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-label="コマ内画像ファイル" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void importPanelImage(file);}}/>
  <input ref={imageInput} className="hidden" type="file" accept="image/png,image/jpeg,image/webp" aria-label="漫画画像ファイル" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void importImage(file);}}/>
  <input ref={projectInput} className="hidden" type="file" accept=".zip,application/zip" aria-label="プロジェクトZIPファイル" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void importProject(file);}}/>
  <input ref={jsonInput} className="hidden" type="file" accept=".json,application/json" aria-label="セリフ設定JSONファイル" onChange={e=>{const file=e.target.files?.[0];e.target.value='';if(file)void readDialogues(file);}}/>
@@ -170,7 +190,7 @@ export default function App(){
  {hasDocument?<div className="canvas-workspace" style={{minWidth:doc.project.width*zoom+100,minHeight:doc.project.height*zoom+100}} onPointerDown={e=>{if(e.target===e.currentTarget&&mode==='select'&&!space.current)selectBalloon(null);}}><div className="page-label">PAGE 01 <span>{doc.project.width} × {doc.project.height} PX</span></div><svg className="artboard" ref={svgRef} width={doc.project.width*zoom} height={doc.project.height*zoom} viewBox={`0 0 ${doc.project.width} ${doc.project.height}`} aria-label="漫画編集キャンバス" onPointerDown={e=>{if(e.target===e.currentTarget)selectBalloon(null);}}>
  {isPageProject(doc.project)&&<rect width={doc.project.width} height={doc.project.height} fill={doc.project.page.backgroundColor} onPointerDown={()=>{if(mode==='select'&&!space.current)selectBalloon(null);}}/>}
  {doc.image&&<image href={doc.image} width={doc.project.width} height={doc.project.height} onPointerDown={()=>{if(mode==='select'&&!space.current)selectBalloon(null);}}/>}
- <PanelLayer panels={orderedPanels(doc.project)} selected={selectedPanel} tool={objectTool} zoom={zoom} onStart={startPanel}/>
+ <PanelLayer panels={orderedPanels(doc.project)} selected={selectedPanel} tool={objectTool} zoom={zoom} onStart={startPanel} imageEditing={panelImageEditing&&!!selectedFrame?.image} images={panelImagesSVG(doc.project,doc.assets)}/>
  {doc.project.balloons.map(item=><g key={item.id} className={mode==='select'?'balloon':''} pointerEvents={objectTool==='panel'?'none':undefined} onPointerDown={e=>start(e,'move',item)}><g dangerouslySetInnerHTML={{__html:objectArtworkSVG(item)}}/>{item.kind==='text'&&<rect transform={textTransform(item)} x={item.textFrame.x} y={item.textFrame.y} width={item.textFrame.width} height={item.textFrame.height} fill="none" pointerEvents={objectTool==='panel'?'none':'all'}/>}</g>)}
  {b&&mode==='select'&&<SelectionOverlay b={b} zoom={zoom} target={editTarget} textEditing={textEditing} clipEditing={clipEditing} onStart={(e,type)=>start(e,type,b)}/>}
 
@@ -179,7 +199,7 @@ export default function App(){
  <div className="canvas-bottom"><span className="canvas-instruction">{hasDocument?<><MousePointer2 size={13}/>ドラッグで移動<span>·</span>{objectTool==='panel'?'四隅の□でサイズ変更':'右下の□でサイズ変更'}</>:<><Sparkles size={13}/>あなたの漫画に、ぴったりのことばを。</>}</span><div className="zoom-controls"><IconButton label="縮小" onClick={()=>zoomBy(1/1.2)} disabled={!hasDocument}><Minus size={16}/></IconButton><button className="zoom-value" onClick={fit} disabled={!hasDocument}>{Math.round(zoom*100)}<span>%</span></button><IconButton label="拡大" onClick={()=>zoomBy(1.2)} disabled={!hasDocument}><Plus size={16}/></IconButton><span className="zoom-divider"/><IconButton label="全体を表示" onClick={fit} disabled={!hasDocument}><Maximize size={15}/></IconButton></div></div>
  </section>
  <aside className={`right-panel ${panel==='properties'?'mobile-open':''}`}><div className="properties-heading"><div><p className="eyebrow">PROPERTIES</p><h2>プロパティ</h2></div><span className="properties-mark"><Type size={18}/></span><button className="mobile-close" aria-label="プロパティを閉じる" onClick={()=>setPanel(null)}><X size={18}/></button></div>
- {selectedFrame&&<PanelProperties panel={selectedFrame} page={doc.project} updateBounds={patch=>{const p=ref.current.project;apply({...p,panels:p.panels!.map(f=>f.id===selectedFrame.id?setPanelBounds(p,f,patch):f)});}} update={patch=>apply({...doc.project,panels:doc.project.panels!.map(f=>f.id===selectedFrame.id?{...f,...patch}:f)})} remove={remove}/>}<div className="dialogue-properties" hidden={!!selectedFrame}><PropertiesPanel clipEditing={clipEditing} setClipEditing={setClipEditing} b={b} textInfo={textInfo} textEditing={textEditing} editTarget={b?.kind==='text'?'text':editTarget} setEditTarget={setEditTarget} setTextFocused={setTextFocused} onTextFocus={()=>{setTextFocused(true);textSnapshot.current=structuredClone(ref.current.project);}} onTextBlur={()=>{setTextFocused(false);if(textSnapshot.current&&signature(textSnapshot.current)!==signature(ref.current.project))pushHistory(textSnapshot.current);textSnapshot.current=null;}} update={update} style={style} outline={outline} shadow={shadow} loadFamily={loadFamily} duplicate={duplicate} remove={remove}/></div>
+ {selectedFrame&&<PanelProperties imageEditing={panelImageEditing} setImageEditing={setPanelImageEditing} loadImage={()=>panelImageInput.current?.click()} busy={!!busy} panel={selectedFrame} page={doc.project} updateBounds={patch=>{const p=ref.current.project;apply({...p,panels:p.panels!.map(f=>f.id===selectedFrame.id?setPanelBounds(p,f,patch):f)});}} update={patch=>apply({...doc.project,panels:doc.project.panels!.map(f=>f.id===selectedFrame.id?{...f,...patch}:f)})} remove={remove}/>}<div className="dialogue-properties" hidden={!!selectedFrame}><PropertiesPanel clipEditing={clipEditing} setClipEditing={setClipEditing} b={b} textInfo={textInfo} textEditing={textEditing} editTarget={b?.kind==='text'?'text':editTarget} setEditTarget={setEditTarget} setTextFocused={setTextFocused} onTextFocus={()=>{setTextFocused(true);textSnapshot.current=structuredClone(ref.current.project);}} onTextBlur={()=>{setTextFocused(false);if(textSnapshot.current&&signature(textSnapshot.current)!==signature(ref.current.project))pushHistory(textSnapshot.current);textSnapshot.current=null;}} update={update} style={style} outline={outline} shadow={shadow} loadFamily={loadFamily} duplicate={duplicate} remove={remove}/></div>
 
  <div className="properties-footer"><span>非破壊編集</span><span>元の画像を保護</span></div></aside>
  </main>

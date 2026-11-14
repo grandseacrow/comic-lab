@@ -27,7 +27,7 @@ export function resizePanel(panel:Panel,corner:PanelCorner,dx:number,dy:number,p
  if(panel.editing.locked)return structuredClone(panel);const b=panelBounds(panel);let x=b.x,y=b.y,right=b.x+b.width,bottom=b.y+b.height;
  if(corner.includes('w'))x=Math.max(0,Math.min(right-MIN_PANEL_SIZE,x+dx));else right=Math.min(page.width,Math.max(x+MIN_PANEL_SIZE,right+dx));
  if(corner.includes('n'))y=Math.max(0,Math.min(bottom-MIN_PANEL_SIZE,y+dy));else bottom=Math.min(page.height,Math.max(y+MIN_PANEL_SIZE,bottom+dy));
- return{...panel,points:[[x,y],[right,y],[right,bottom],[x,bottom]]};
+ return{...panel,points:[[x,y],[right,y],[right,bottom],[x,bottom]],...(panel.image?{image:{...panel.image,offsetX:panel.image.offsetX+b.x-x,offsetY:panel.image.offsetY+b.y-y}}:{})};
 }
 export function addPanel(project:Project,center:Point):Project{
  if(!isPageProject(project))throw new Error('コマは新規漫画ページで追加できます。');if(project.panels.length>=MAX_PANELS)throw new Error('コマは100個まで追加できます。');

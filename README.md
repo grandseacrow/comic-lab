@@ -1,7 +1,17 @@
-# comic.lab — v2.0-alpha.1（コマ割りエディタ）
+# comic.lab — v2.0-alpha.2（コマ内画像エディタ）
 
 完成済みの漫画画像へ、SVG吹き出しと編集できる日本語セリフを重ねるクライアントサイドアプリです。
 Vector-Labとは独立したプロジェクトです。
+
+## v2.0-alpha.2
+
+コマにPNG・JPEG・WebPを配置できるようになりました。中央Coverで読み込み、Cover/Contain、画像だけのドラッグ、中心を固定した倍率調整、位置・倍率リセット、差し替え・削除に対応します。コマ枠と内部画像は右パネルで操作対象を切り替えます。
+
+画像はコマの頂点から生成した形状で非破壊クリッピングし、コマ移動には追従、コマサイズ変更では画像の原稿上の位置・倍率を保持します。元画像は素材IDで管理してZIPへ保存し、画像操作もUndo/Redoできます。セリフ設定JSONは変更していません。
+
+[alpha.2の操作・データ形式・122件の検証結果と未確認事項](docs/v2-alpha2.md)を参照してください。
+
+確認用URL: https://feature-v2-panel-layout-comic-lab.kairi-sakusaku.workers.dev/ 。本番・main・旧Pages設定・Wrangler設定は変更しません。
 
 ## v2.0-alpha.1
 
