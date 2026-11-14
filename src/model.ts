@@ -1,3 +1,5 @@
+import type{PageSettings,Panel}from'./page-data';
+import{validatePageData}from'./page-data';
 export type Point = { x: number; y: number };
 export type Tail = { enabled: boolean; a: Point; b: Point; p: Point };
 export type TextFrame = { x: number; y: number; width: number; height: number };
@@ -9,8 +11,8 @@ export type ZigzagSettings={count:number;depth:number;sharpness:number};
 export const defaultZigzag=():ZigzagSettings=>({count:16,depth:.22,sharpness:.65});
 export type ClipSettings={enabled:boolean;includeText:boolean;x:number;y:number;width:number;height:number};
 export function defaultClip(b:{x:number;y:number;width:number;height:number}):ClipSettings{return{enabled:false,includeText:false,x:b.x,y:b.y,width:b.width,height:b.height};}
-export type Balloon = { clip:ClipSettings; zigzag:ZigzagSettings; bodyRotation:number; textRotation:number; textFrame: TextFrame; roundness: number; id: string; kind: 'ellipse'|'rounded'|'text'|'zigzag'; x: number; y: number; width: number; height: number; fill: string; stroke: string; strokeWidth: number; tail: Tail; text: string; style: TextStyle };
-export type Project = { id: string; version: 1; title: string; width: number; height: number; background: { path: string; mime: string; name: string } | null; balloons: Balloon[] };
+export type Balloon = { panelId?:string|null; clip:ClipSettings; zigzag:ZigzagSettings; bodyRotation:number; textRotation:number; textFrame: TextFrame; roundness: number; id: string; kind: 'ellipse'|'rounded'|'text'|'zigzag'; x: number; y: number; width: number; height: number; fill: string; stroke: string; strokeWidth: number; tail: Tail; text: string; style: TextStyle };
+export type Project = { id: string; version: 1|2; page?:PageSettings; panels?:Panel[]; title: string; width: number; height: number; background: { path: string; mime: string; name: string } | null; balloons: Balloon[] };
 export type Document = { project: Project; image: string | null; bytes: Uint8Array | null };
 export const uid = () => crypto.randomUUID();
 export function emptyDocument(): Document { return { project: { id: uid(), version: 1, title: '無題の原稿', width: 1000, height: 1400, background: null, balloons: [] }, image: null, bytes: null }; }
@@ -30,12 +32,15 @@ export function validateProject(input: unknown): Project {
  const n = (v: unknown, min: number, max: number) => typeof v==='number' && Number.isFinite(v) && v>=min && v<=max;
  const color = (v:unknown) => typeof v==='string' && /^#[0-9a-f]{6}$/i.test(v);
  const str = (v:unknown, max:number) => typeof v==='string' && v.length<=max;
- if(p.version!==1 || !str(p.id,100) || !str(p.title,200) || !n(p.width,1,20000) || !n(p.height,1,20000) || p.width*p.height>20_000_000 || !Array.isArray(p.balloons) || p.balloons.length>200) return fail();
+ if((p.version!==1&&p.version!==2) || !str(p.id,100) || !str(p.title,200) || !n(p.width,1,20000) || !n(p.height,1,20000) || p.width*p.height>20_000_000 || !Array.isArray(p.balloons) || p.balloons.length>200) return fail();
  if(p.background && (!['image/png','image/jpeg','image/webp'].includes(p.background.mime) || !/^assets\/background\.(png|jpg|webp)$/.test(p.background.path) || !str(p.background.name,255))) return fail();
+ if(p.version===2){if(p.background!==null) return fail();validatePageData(p.page,p.panels,p.width,p.height);}
+ else if(p.page!==undefined||p.panels!==undefined)return fail();
  const ids = new Set();
  for(const b of p.balloons) {
   if(!b || !str(b.id,100) || ids.has(b.id) || !['ellipse','rounded','text','zigzag'].includes(b.kind) || !n(b.x,-40000,40000) || !n(b.y,-40000,40000) || !n(b.width,40,20000) || !n(b.height,40,20000) || !color(b.fill) || !color(b.stroke) || !n(b.strokeWidth,0,30) || !str(b.text,10000)) return fail();
   ids.add(b.id);
+  if(b.panelId!==undefined&&b.panelId!==null&&(!str(b.panelId,100)||!b.panelId))return fail();
   if(b.clip===undefined)b.clip=defaultClip(b);
   if(!b.clip||typeof b.clip.enabled!=='boolean'||typeof b.clip.includeText!=='boolean'||!n(b.clip.x,-80000,80000)||!n(b.clip.y,-80000,80000)||!n(b.clip.width,1,40000)||!n(b.clip.height,1,40000))return fail();
   if(b.zigzag===undefined)b.zigzag=defaultZigzag();
@@ -60,3 +65,5 @@ export function validateProject(input: unknown): Project {
  }
  return structuredClone(p);
 }
+
+export function isPageProject(p:Project):p is Project&{version:2;page:PageSettings;panels:Panel[]}{return p.version===2&&!!p.page&&Array.isArray(p.panels);}
