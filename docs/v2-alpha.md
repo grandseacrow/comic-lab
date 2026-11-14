@@ -45,11 +45,19 @@
 
 1. Cloudflareダッシュボードの **Workers & Pages → comic-lab → Settings → Builds** を開きます。
 2. 本番ブランチは **main** のまま、ブランチ制御で **非本番ブランチのビルド／プレビュー** を有効にします。対象を選べる場合は `feature/v2-panel-layout` を追加します。表示名はCloudflareの画面により異なります。
-3. ビルドは `npm run build`、静的アセットは `dist`。現在の本番設定の値を確認して使用します。非本番の処理は **バージョンアップロード（versions upload）** とプレビューURLを使い、本番トラフィックを切り替えるデプロイは実行しません。
+3. ビルドは `npm run build`、静的アセットは `dist`。alphaブランチの `wrangler.jsonc` にWorker名 `comic-lab` と `previews: {}` を定義しています。`npm ci` で固定版Wrangler 4.162.0を導入し、プレビュー用コマンド `npm exec -- wrangler preview --name v2-panel-layout` を使用できます。本番トラフィックを切り替える `wrangler deploy` は実行しません。
 4. 対象ブランチのビルドを開始し、Cloudflareが表示した **Preview URL** を開きます。画面下の版が **v2.0-alpha.1** であることを確認します。本番URLがv1.55のままかも確認します。
 5. プレビューの設定が不明な場合は、mainのデプロイ設定を変更せず、CloudflareのBuilds画面で現在値を確認してから進めてください。
 
 GitHubのPRではCIがテスト・ビルドを実行し、`comic-lab-review-build` という静的ビルドをArtifactsへ14日間保存します。成果物のダウンロード自体はWeb公開ではありません。ローカル確認はこのブランチで `npm ci` → `npm run dev` でも実施できます。
+
+## alphaプレビュー設定の修正
+
+`Your Wrangler configuration is missing a 'previews' block to run this command.` に対応しました。リポジトリにはWrangler設定が存在しなかったため、alphaブランチに `wrangler.jsonc` を新設しています。Worker名は既存の `comic-lab`、静的アセットは既存ビルドの `dist`、プレビュー設定は空の `previews` ブロックです。ダッシュボードの本番設定、main、旧Pagesワークフローは変更しません。
+
+Wranglerを開発依存関係 `4.162.0` に完全固定し、lockfileも更新しています。既存パッケージの固定済みバージョンは変更していません。Node.js 22.12以上が必要で、CIのNode.js 24は対応しています。
+
+112件のテスト、本番ビルド、Wranglerによる設定読み込み、アセットを含む `wrangler deploy --dry-run` が成功しました。dry-runはアップロードや本番デプロイを行いません。alphaブランチへのpush後、Cloudflare側でプレビュービルドを再実行できます。
 
 ## 手動受入確認
 
