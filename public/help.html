@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>コマに画像を入れる方法 — Comic-Lab v2.1</title>
+<style>
+@font-face{font-family:Noto;src:url('./fonts/NotoSansJP.ttf') format('truetype');font-display:swap}*{box-sizing:border-box}body{margin:0;background:#f7f7f3;color:#303830;font:15px/1.9 Noto,'Hiragino Kaku Gothic ProN',sans-serif}main{max-width:840px;margin:auto;padding:32px 24px 64px}a{color:#345a42;text-underline-offset:4px}header{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid #dce3d4;padding-bottom:16px}header strong{font:700 24px Georgia,serif}h1{font-size:clamp(24px,5vw,34px);line-height:1.5;margin:32px 0 12px}h2{font-size:20px;margin:30px 0 12px}p{margin:12px 0}.intro{color:#68745f}.note{padding:16px 20px;background:#eef3e6;border-left:4px solid #73926a;border-radius:4px}.warning{background:#fff3de;border-color:#ba8a4e}.steps{padding:0;list-style:none;counter-reset:step}.steps li{position:relative;padding:20px 20px 20px 68px;margin:14px 0;background:#fffefa;border:1px solid #dfe6d5;border-radius:10px;counter-increment:step}.steps li:before{content:counter(step);position:absolute;left:20px;top:20px;background:#45664c;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px}.steps h2{font-size:18px;margin:0}.steps p{margin:8px 0 0}.layout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:20px 0}.layout div{padding:16px 10px;text-align:center;border:1px solid #dce4d2;border-radius:8px;background:#fff}.layout b{display:block}.layout .focus{background:#edf3e5;border:2px solid #66865b}table{border-collapse:collapse;width:100%;background:#fff}th,td{padding:13px;text-align:left;border:1px solid #dfe6d5}th{width:35%;font-size:14px}footer{margin-top:32px;color:#748269;font-size:13px}@media(max-width:550px){main{padding:20px 16px 40px}body{font-size:14px}.layout{gap:5px;font-size:12px}.layout div{padding:12px 5px}.steps li{padding:16px 14px 16px 55px}.steps li:before{left:14px;top:16px;width:26px;height:26px;line-height:26px}header strong{font-size:21px}th,td{padding:10px}}
+</style>
+</head>
+<body><main>
+<header><strong>comic.lab <small>v2.1 ヘルプ</small></strong><a href="./">エディタを開く</a></header>
+<h1 id="panel-images">選択したコマに画像を入れる方法</h1>
+<p class="intro">新規漫画ページのコマに、PNG・JPEG・WebP画像を配置できます。このヘルプは別タブで開くので、編集中の画面を残したまま確認できます。</p>
+<div class="note warning"><strong>使うのは、コマを選択した後の「右側」のボタンです。</strong><br>左側の「画像を読み込む」は、完成済み漫画画像を原稿として開く操作です。コマへの画像配置には使いません。</div>
+<div class="layout" role="img" aria-label="左側でコマ選択、中央で入れたいコマをクリック、右側のコマ内画像から読み込みます"><div><b>① 左側</b>コマ選択</div><div><b>② 中央</b>入れたいコマをクリック</div><div class="focus"><b>③ 右側</b>コマ内画像<br>画像を読み込む</div></div>
+<ol class="steps">
+<li><h2>コマ割りのあるページを開く</h2><p>初めて使う場合は、左側の<strong>「新規作成」</strong>を押します。サイズとコマ割りを選び、<strong>「漫画ページを作成」</strong>を押してください。既に新規漫画ページを編集中なら、この手順は不要です。</p></li>
+<li><h2>画像を入れたいコマを選ぶ</h2><p>左側の<strong>「コマ編集」→「コマ選択」</strong>を押し、中央のキャンバスでコマをクリックします。選択したコマには点線と四隅のハンドルが出ます。左側のレイヤー一覧の「コマ 1」などからも選べます。</p></li>
+<li><h2>右側の「画像を読み込む」を押す</h2><p>右側のプロパティに<strong>「コマ内画像」</strong>が表示されます。その中の<strong>「画像を読み込む」</strong>を押し、端末のPNG・JPEG・WebP画像を選んでください。選んだ画像がそのコマに配置されます。</p></li>
+<li><h2>「内部画像を編集」で位置を調整する</h2><p>右側の<strong>「内部画像を編集」</strong>を押し、コマ内をドラッグすると画像だけが動きます。編集中はガイドがオレンジになり、枠のハンドルは隠れます。画像の大きさは<strong>拡大率スライダー・数値入力</strong>で調整できます。</p></li>
+</ol>
+<div class="note"><strong>スマートフォンの場合</strong><br>上部の「ツール・レイヤー」でコマ選択ツールを選びます。コマをタップした後、上部の<strong>「プロパティ」</strong>を押すと、画像を読み込む設定が開きます。画像の位置はタッチドラッグ、倍率はスライダーで調整できます。</div>
+<h2>画像の見え方を変える</h2>
+<table><tbody>
+<tr><th scope="row">Cover</th><td>縦横比を維持してコマ全体を埋めます。コマからはみ出た部分は隠れます。画像読込時の初期配置です。</td></tr>
+<tr><th scope="row">Contain</th><td>画像全体が見えるよう中央へ配置します。コマとの比率が違う場合は余白ができます。</td></tr>
+<tr><th scope="row">表示位置をリセット</th><td>現在の倍率を保ったまま、画像をコマの中央へ戻します。</td></tr>
+<tr><th scope="row">初期倍率へ戻す</th><td>現在のCover／Contain方式とコマ寸法に合わせた倍率へ戻します。</td></tr>
+<tr><th scope="row">コマに合わせ直す</th><td>現在のCover／Contain方式で、倍率と位置をまとめて合わせ直します。</td></tr>
+<tr><th scope="row">画像を変更／画像を削除</th><td>差し替えや削除ができます。画像を削除してもコマ枠は残ります。</td></tr>
+</tbody></table>
+<h2>コマ枠そのものを動かしたいとき</h2>
+<p><strong>「コマ枠を編集」</strong>へ戻します。枠をドラッグすると内部画像も一緒に移動します。四隅で枠のサイズを変えた場合は、画像の位置・倍率を保ち、見える範囲だけを変更します。吹き出しを編集する場合は、その吹き出しを選択してください。</p>
+<h2>「画像を読み込む」が見つからない場合</h2>
+<ul><li>右側が「セリフ」になっている場合は、吹き出しが選択されています。「コマ選択」に切り替えて、コマを選び直してください。</li><li>コマ編集のない完成済み画像モードでは、この機能は使えません。「新規作成」から漫画ページを作成してください。</li><li>画像が既に入っているコマでは、ボタン名が<strong>「画像を変更」</strong>になります。</li></ul>
+<h2>編集内容を保存する</h2>
+<p>再編集したい場合は上部の<strong>「プロジェクト保存」</strong>でZIPを保存してください。画像・コマ・セリフがまとめて保存されます。完成原稿は<strong>「PNG書き出し」</strong>で出力できます。<strong>セリフ設定JSONにはコマ画像は含まれません。</strong></p>
+<footer>自動保存はありません。画像は端末内で処理し、元画像を破壊的に切り取りません。元の編集画面には、このタブを閉じて戻ってください。</footer>
+</main></body></html>
