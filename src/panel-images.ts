@@ -2,7 +2,7 @@ import type {Document,Project} from './model';
 import {uid,isPageProject,validateProject} from './model';
 import type {Panel,PanelImage,ImageAsset} from './page-data';
 import {panelBounds} from './page-data';
-import {orderedPanels,panelPath} from './panels';
+import {orderedPanels,panelPath,panelArtworkSVG} from './panels';
 export type ImageResource={bytes:Uint8Array;url:string;pixels?:number};
 export type ImageResources=Record<string,ImageResource>;
 export const MAX_IMAGE_BYTES=40*1024*1024;
@@ -30,8 +30,13 @@ export function checkResourceBudget(doc:Document,bytes:number,pixels:number){
  if(resources.length>=100||total+bytes>MAX_IMAGE_BYTES||decodedPixels+pixels>MAX_IMAGE_PIXELS)throw Error('画像素材の上限（100枚・合計40MB・展開後8,000万画素）を超えます。ZIP保存して開き直すと未使用の履歴素材を解放できます。');
 }
 const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
-export function panelImagesSVG(project:Project,resources:ImageResources={}):string{return orderedPanels(project).map(panel=>{
- const image=panel.image;if(!image)return'';const resource=resources[image.assetId];if(!Object.hasOwn(resources,image.assetId)||!resource)throw Error('コマの画像素材が見つかりません。ZIPを開き直してください。');
- const b=panelBounds(panel),id='panel-image-'+Array.from(panel.id,c=>c.codePointAt(0)!.toString(16)).join('-');
- return `<defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><path d="${panelPath(panel)}"/></clipPath></defs><g clip-path="url(#${id})"><image href="${escape(resource.url)}" x="${b.x+image.offsetX}" y="${b.y+image.offsetY}" width="${image.width*image.scale}" height="${image.height*image.scale}" preserveAspectRatio="none"/></g>`;
- }).join('');}
+export function panelImagesSVG(project:Project,resources:ImageResources={}):string{
+ const panels=orderedPanels(project),backgrounds=panels.filter(p=>p.kind==='background'),normal=panels.filter(p=>p.kind==='normal');
+ const render=(panel:Panel)=>{const image=panel.image;if(!image)return'';const resource=resources[image.assetId];if(!Object.hasOwn(resources,image.assetId)||!resource)throw Error('コマの画像素材が見つかりません。ZIPを開き直してください。');
+  const b=panelBounds(panel),id='panel-image-'+Array.from(panel.id,c=>c.codePointAt(0)!.toString(16)).join('-'),raster=`<image href="${escape(resource.url)}" x="${b.x+image.offsetX}" y="${b.y+image.offsetY}" width="${image.width*image.scale}" height="${image.height*image.scale}" preserveAspectRatio="none"/>`;
+  return(panel.clipImage??panel.kind==='normal')?`<defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><path d="${panelPath(panel)}"/></clipPath></defs><g clip-path="url(#${id})">${raster}</g>`:raster;
+ };
+ const mask=backgrounds.length&&normal.length&&!project.page?.showGutterBackground?`<defs><mask id="panel-gutter-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${project.width}" height="${project.height}"><rect width="100%" height="100%" fill="white"/>${normal.map(p=>`<path d="${panelPath(p)}" fill="black"/>`).join('')}</mask></defs><rect width="100%" height="100%" fill="${project.page!.backgroundColor}" mask="url(#panel-gutter-mask)"/>`:'';
+ const content=backgrounds.map(render).join('')+panelArtworkSVG(project,'background')+mask+normal.map(render).join('');
+ return panels.some(p=>p.image&&!(p.clipImage??p.kind==='normal'))?`<defs><clipPath id="panel-page-clip"><rect width="${project.width}" height="${project.height}"/></clipPath></defs><g clip-path="url(#panel-page-clip)">${content}</g>`:content;
+}

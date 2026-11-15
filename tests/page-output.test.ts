@@ -31,7 +31,7 @@ it('exports the same artwork through the browser Canvas pipeline at page pixel r
 });
 it('rejects unsupported or malformed page panels before replacing a document',()=>{
  const p=newPageDocument(1200,1800,{template:'four-grid'}).project;
- for(const patch of [{kind:'future'},{points:[[0,0],[100,10],[100,100],[0,100]]},{borderColor:'<script>'},{borderWidth:-1},{order:1}]){const invalid=structuredClone(p);Object.assign(invalid.panels![0],patch);expect(()=>validateProject(invalid)).toThrow();}
+ for(const patch of [{kind:'future'},{points:[[0,0],[100,100],[100,0],[0,100]]},{borderColor:'<script>'},{borderWidth:-1},{order:1}]){const invalid=structuredClone(p);Object.assign(invalid.panels![0],patch);expect(()=>validateProject(invalid)).toThrow();}
  expect(p.panels![0].kind).toBe('normal');
 });
 
