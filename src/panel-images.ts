@@ -36,7 +36,11 @@ export function panelImagesSVG(project:Project,resources:ImageResources={}):stri
   const b=panelBounds(panel),id='panel-image-'+Array.from(panel.id,c=>c.codePointAt(0)!.toString(16)).join('-'),raster=`<image href="${escape(resource.url)}" x="${b.x+image.offsetX}" y="${b.y+image.offsetY}" width="${image.width*image.scale}" height="${image.height*image.scale}" preserveAspectRatio="none"/>`;
   return(panel.clipImage??panel.kind==='normal')?`<defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><path d="${panelPath(panel)}"/></clipPath></defs><g clip-path="url(#${id})">${raster}</g>`:raster;
  };
- const mask=backgrounds.length&&normal.length&&!project.page?.showGutterBackground?`<defs><mask id="panel-gutter-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${project.width}" height="${project.height}"><rect width="100%" height="100%" fill="white"/>${normal.map(p=>`<path d="${panelPath(p)}" fill="black"/>`).join('')}</mask></defs><rect width="100%" height="100%" fill="${project.page!.backgroundColor}" mask="url(#panel-gutter-mask)"/>`:'';
+ // Mask only the space outside panel footprints. A background panel remains
+ // a visible panel: excluding its own footprint used to paint it white and
+ // leave just the raster spilling into lower panels, mimicking a Y offset.
+ const visibleFrames=[...normal,...backgrounds.filter(p=>p.image)];
+ const mask=backgrounds.length&&normal.length&&!project.page?.showGutterBackground?`<defs><mask id="panel-gutter-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${project.width}" height="${project.height}"><rect width="100%" height="100%" fill="white"/>${visibleFrames.map(p=>`<path d="${panelPath(p)}" fill="black"/>`).join('')}</mask></defs><rect width="100%" height="100%" fill="${project.page!.backgroundColor}" mask="url(#panel-gutter-mask)"/>`:'';
  const content=backgrounds.map(render).join('')+panelArtworkSVG(project,'background')+mask+normal.map(render).join('');
  return panels.some(p=>p.image&&!(p.clipImage??p.kind==='normal'))?`<defs><clipPath id="panel-page-clip"><rect width="${project.width}" height="${project.height}"/></clipPath></defs><g clip-path="url(#panel-page-clip)">${content}</g>`:content;
 }

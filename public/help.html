@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>コマに画像を入れる方法 — Comic-Lab v2.15α</title>
+<title>コマに画像を入れる方法 — Comic-Lab v2.41α</title>
 <style>
 :root{--ui-text:#202420;--ui-secondary:#394238;--ui-muted:#50584e;--ui-accent:#294933;--ui-warning:#805017;--ui-danger:#8b3f2d}
 @font-face{font-family:Noto;src:url('./fonts/NotoSansJP.ttf') format('truetype');font-display:swap}*{box-sizing:border-box}body{margin:0;background:#f7f7f3;color:var(--ui-text);font:15px/1.9 Noto,'Hiragino Kaku Gothic ProN',sans-serif}main{max-width:840px;margin:auto;padding:32px 24px 64px}a{color:var(--ui-accent);text-underline-offset:4px}header{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid #dce3d4;padding-bottom:16px}header strong{font:700 24px Georgia,serif}h1{font-size:clamp(24px,5vw,34px);line-height:1.5;margin:32px 0 12px}h2{font-size:20px;margin:30px 0 12px}p{margin:12px 0}.intro{color:var(--ui-secondary)}.note{padding:16px 20px;background:#eef3e6;border-left:4px solid #73926a;border-radius:4px}.warning{background:#fff3de;border-color:#ba8a4e}.steps{padding:0;list-style:none;counter-reset:step}.steps li{position:relative;padding:20px 20px 20px 68px;margin:14px 0;background:#fffefa;border:1px solid #dfe6d5;border-radius:10px;counter-increment:step}.steps li:before{content:counter(step);position:absolute;left:20px;top:20px;background:#45664c;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px}.steps h2{font-size:18px;margin:0}.steps p{margin:8px 0 0}.layout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:20px 0}.layout div{padding:16px 10px;text-align:center;border:1px solid #dce4d2;border-radius:8px;background:#fff}.layout b{display:block}.layout .focus{background:#edf3e5;border:2px solid #66865b}table{border-collapse:collapse;width:100%;background:#fff}th,td{padding:13px;text-align:left;border:1px solid #dfe6d5}th{width:35%;font-size:14px}footer{margin-top:32px;color:var(--ui-secondary);font-size:13px}@media(max-width:550px){main{padding:20px 16px 40px}body{font-size:14px}.layout{gap:5px;font-size:12px}.layout div{padding:12px 5px}.steps li{padding:16px 14px 16px 55px}.steps li:before{left:14px;top:16px;width:26px;height:26px;line-height:26px}header strong{font-size:21px}th,td{padding:10px}}
 </style>
 </head>
 <body><main>
-<header><strong>comic.lab <small>v2.15α ヘルプ</small></strong><a href="./">エディタを開く</a></header>
+<header><strong>comic.lab <small>v2.41α ヘルプ</small></strong><a href="./">エディタを開く</a></header>
 <h1 id="panel-images">選択したコマに画像を入れる方法</h1>
 <nav aria-label="ヘルプ目次"><a href="#panel-images">画像を入れる</a> ／ <a href="#free-panels">分割・統合・斜めコマ</a> ／ <a href="#background-panels">背景コマ</a></nav><p class="intro">新規漫画ページのコマに、PNG・JPEG・WebP画像を配置できます。このヘルプは別タブで開くので、編集中の画面を残したまま確認できます。</p>
 <div class="note warning"><strong>使うのは、コマを選択した後の「右側」のボタンです。</strong><br>左側の「画像を読み込む」は、完成済み漫画画像を原稿として開く操作です。コマへの画像配置には使いません。</div>
@@ -41,7 +41,7 @@
 <p>分割・統合・頂点ドラッグは取り消し／やり直しに対応します。統合で表示に採用しなかった画像も、取り消しで復元できます。</p>
 <h2 id="background-panels">画像を背景に使う</h2>
 <p>右側の「コマ種別」を<strong>「画像コマ（背景）」</strong>にすると、画像と位置・倍率を保ったまま通常コマの後ろへ移ります。初期状態では枠線なし・画像クリッピングOFFです。枠線とクリッピングは別々に切り替えられます。</p>
-<div class="note"><strong>背景が見えないとき</strong><br>左側のページ設定で<strong>「コマ間の背景を表示」</strong>をONにしてください。OFFでは、通常コマの外側とページ余白をページ背景色で覆います。通常コマが1つもない場合は、背景だけを表示します。</div>
+<div class="note"><strong>背景が見えないとき</strong><br>左側のページ設定で<strong>「コマ間の背景を表示」</strong>をONにしてください。OFFでは、通常コマと画像入り背景コマの領域外をページ背景色で覆います。背景コマ自身の輪郭内は隠しません。通常コマが1つもない場合は、背景だけを表示します。</div>
 <p>背景コマの画像も「内部画像を編集」で移動・倍率調整できます。背景コマの分割・統合・頂点編集は今回の対象外です。必要なら「通常コマ」に戻して操作してください。</p>
 <h2>編集内容を保存する</h2>
 <p>再編集したい場合は上部の<strong>「プロジェクト保存」</strong>でZIPを保存してください。画像・コマ・セリフがまとめて保存されます。完成原稿は<strong>「PNG書き出し」</strong>で出力できます。<strong>セリフ設定JSONにはコマ画像は含まれません。</strong></p>
