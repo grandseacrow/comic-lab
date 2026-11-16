@@ -13,7 +13,7 @@ export type ClipSettings={enabled:boolean;includeText:boolean;x:number;y:number;
 export function defaultClip(b:{x:number;y:number;width:number;height:number}):ClipSettings{return{enabled:false,includeText:false,x:b.x,y:b.y,width:b.width,height:b.height};}
 export type Balloon = { panelTrim?:boolean; panelId?:string|null; clip:ClipSettings; zigzag:ZigzagSettings; bodyRotation:number; textRotation:number; textFrame: TextFrame; roundness: number; id: string; kind: 'ellipse'|'rounded'|'text'|'zigzag'; x: number; y: number; width: number; height: number; fill: string; stroke: string; strokeWidth: number; tail: Tail; text: string; style: TextStyle };
 export type Project = { assets?:ImageAsset[]; id: string; version: 1|2; page?:PageSettings; panels?:Panel[]; title: string; width: number; height: number; background: { path: string; mime: string; name: string } | null; balloons: Balloon[] };
-export type Document = { project: Project; image: string | null; bytes: Uint8Array | null; assets?:Record<string,{bytes:Uint8Array;url:string;pixels?:number}> };
+export type Document = { folder?:{manifest:import('./local-projects').LocalManifest;files:Record<string,Uint8Array>}; project: Project; image: string | null; bytes: Uint8Array | null; assets?:Record<string,{bytes:Uint8Array;url:string;pixels?:number}> };
 export const uid = () => crypto.randomUUID();
 export function emptyDocument(): Document { return { project: { id: uid(), version: 1, title: '無題の原稿', width: 1000, height: 1400, background: null, balloons: [] }, image: null, bytes: null }; }
 export function defaultTextFrame(b: Pick<Balloon,'kind'|'width'|'height'>): TextFrame {

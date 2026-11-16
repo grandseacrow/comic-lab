@@ -9,14 +9,16 @@ import { ensureFont, layoutText } from './typography';
 import { balloonPath } from './geometry';
 import {objectArtworkSVG} from './object-artwork';
 export function download(blob:Blob,name:string){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);}
-export function projectZip(doc:Document):Uint8Array{
+export function projectFiles(doc:Document):Record<string,Uint8Array>{
  const project=validateProject(pruneImageAssets(doc.project));
  const files:Record<string,Uint8Array>={'project.json':strToU8(JSON.stringify(project,null,2))};
  for(const asset of usedImageAssets(project)){const resource=doc.assets?.[asset.id];if(!resource)throw new Error('保存するコマ画像が見つかりません。');files[asset.path]=resource.bytes;}
  if(Object.values(files).reduce((sum,b)=>sum+b.length,0)>49*1024*1024)throw new Error('保存するプロジェクトが50MBの上限を超えます。画像を減らしてください。');
- if(doc.project.background&&doc.bytes)files[doc.project.background.path]=doc.bytes;
- return zipSync(files,{level:0});
+ if(project.background){if(!doc.bytes)throw Error('元画像データが見つかりません。');files[project.background.path]=doc.bytes;}
+ if(Object.values(files).reduce((sum,b)=>sum+b.length,0)>49*1024*1024)throw Error('保存データが50MBの上限を超えます。');
+ return files;
 }
+export function projectZip(doc:Document):Uint8Array{if(doc.folder)throw Error('フォルダ形式の全ページはプロジェクトバックアップ機能で保存してください。');return zipSync(projectFiles(doc),{level:0});}
 export function unzipBounded(data:Uint8Array):Promise<Record<string,Uint8Array>>{
  return new Promise((resolve,reject)=>{
  let count=0,total=0,active=0,finished=false,failed=false;
@@ -25,7 +27,7 @@ export function unzipBounded(data:Uint8Array):Promise<Record<string,Uint8Array>>
  const done=()=>{if(finished&&active===0&&!failed)resolve(files);};
  const unzip=new Unzip(file=>{
   if(failed)return;
-  if(++count>102 || file.name.includes('..') || file.name.startsWith('/') || !/^(project\.json|assets\/background\.(png|jpg|webp)|assets\/images\/[a-zA-Z0-9_-]{1,100}\.(png|jpg|webp))$/.test(file.name) || Object.hasOwn(files,file.name) || (file.originalSize??0)>100*1024*1024){fail(new Error('ZIPの内容が対応形式ではないか、上限を超えています。'));return;}
+  if(++count>1102 || file.name.includes('..') || file.name.startsWith('/') || !/^(project\.json|assets\/background\.(png|jpg|webp)|assets\/images\/[a-zA-Z0-9_-]{1,100}\.(png|jpg|webp)|pages\/[a-zA-Z0-9_-]+\.json|images\/[a-f0-9]{64}\.(png|jpg|webp))$/.test(file.name) || Object.hasOwn(files,file.name) || (file.originalSize??0)>100*1024*1024){fail(new Error('ZIPの内容が対応形式ではないか、上限を超えています。'));return;}
   files[file.name]=new Uint8Array();active++;const chunks:Uint8Array[]=[];let size=0;
   file.ondata=(error,chunk,final)=>{
    if(failed)return;
@@ -57,6 +59,11 @@ export async function decodeImage(bytes:Uint8Array){
 export async function readProject(file:File):Promise<Document>{
  if(file.size>50*1024*1024)throw new Error('プロジェクトファイルは50MB以下にしてください。');
  const files=await unzipBounded(new Uint8Array(await file.arrayBuffer()));
+ let header:unknown;try{header=JSON.parse(strFromU8(files['project.json']??new Uint8Array()));}catch{/* Existing reader reports malformed project JSON. */}
+ if((header as {format?:string})?.format==='comic-lab-folder')return(await import('./local-projects')).openFolderArchive(files);
+ return readProjectFiles(files);
+}
+export async function readProjectFiles(files:Record<string,Uint8Array>):Promise<Document>{
  if(!files['project.json'])throw new Error('project.jsonが見つかりません。');
  let raw:unknown;try{raw=JSON.parse(strFromU8(files['project.json']));}catch{throw new Error('project.jsonが正しいJSONではありません。');}
  const project=validateProject(raw);let bytes:Uint8Array|null=null,image:string|null=null;
