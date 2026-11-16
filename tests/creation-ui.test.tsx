@@ -15,7 +15,7 @@ it('creates every kind at the current screen center after zoom and paper-origin 
  const cases=[['楕円＋','ellipse',-100,-300],['角丸四角＋','rounded',-300,-700],['文字のみ＋','text',-500,-900],['ギザギザ＋','zigzag',-600,-1100]]as const;
  const expected:{x:number;y:number;kind:string}[]=[];
  for(const[label,kind,left,top]of cases){origin.left=left;origin.top=top;const zoom=renderer.root.findByProps({'aria-label':'漫画編集キャンバス'}).props.width/1000;expected.push({kind,x:(640-left)/zoom,y:(420-top)/zoom});await act(async()=>{renderer.root.findAllByType('button').find(n=>text(n)===label)!.props.onClick();});}
- await act(async()=>{await renderer.root.findAllByType('button').find(n=>text(n)==='セリフ設定をJSON保存')!.props.onClick();});
+ await act(async()=>{await renderer.root.findAllByType('button').find(n=>text(n)==='セリフ設定JSONを書き出す')!.props.onClick();});
  const data=JSON.parse(await vi.mocked(download).mock.calls[0][0].text());expect(data.balloons).toHaveLength(4);
  data.balloons.forEach((b:any,i:number)=>{expect(b.kind).toBe(expected[i].kind);expect(b.x+b.width/2).toBeCloseTo(expected[i].x);expect(b.y+b.height/2).toBeCloseTo(expected[i].y);expect(b.clip.x).toBeCloseTo(b.x);expect(b.clip.y).toBeCloseTo(b.y);});
 });

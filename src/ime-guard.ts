@@ -1,0 +1,2 @@
+import{useRef}from'react';import type{KeyboardEvent}from'react';
+export function useIMEGuard(){const state=useRef({active:false,endedAt:-Infinity});return{onCompositionStart:()=>{state.current.active=true;},onCompositionEnd:()=>{state.current={active:false,endedAt:Date.now()};},blocked:(e:KeyboardEvent)=>state.current.active||Date.now()-state.current.endedAt<80||e.nativeEvent?.isComposing||e.keyCode===229};}

@@ -17,3 +17,11 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Upload review build
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: comic-lab-review-build
+          path: dist/
+          retention-days: 14
+          if-no-files-found: error
