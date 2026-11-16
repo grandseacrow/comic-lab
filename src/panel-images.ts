@@ -41,6 +41,10 @@ export function panelImagesSVG(project:Project,resources:ImageResources={}):stri
  // leave just the raster spilling into lower panels, mimicking a Y offset.
  const visibleFrames=[...normal,...backgrounds.filter(p=>p.image)];
  const mask=backgrounds.length&&normal.length&&!project.page?.showGutterBackground?`<defs><mask id="panel-gutter-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="${project.width}" height="${project.height}"><rect width="100%" height="100%" fill="white"/>${visibleFrames.map(p=>`<path d="${panelPath(p)}" fill="black"/>`).join('')}</mask></defs><rect width="100%" height="100%" fill="${project.page!.backgroundColor}" mask="url(#panel-gutter-mask)"/>`:'';
- const content=backgrounds.map(render).join('')+panelArtworkSVG(project,'background')+mask+normal.map(render).join('');
+ // Normal panels are foreground surfaces, including empty panels and the
+ // transparent portions of their images. Otherwise an unclipped background
+ // raster leaks into its neighbors even though its coordinates never move.
+ const normalContent=normal.map(p=>(backgrounds.length?`<path d="${panelPath(p)}" fill="${project.page!.backgroundColor}"/>`:'')+render(p)).join('');
+ const content=backgrounds.map(render).join('')+panelArtworkSVG(project,'background')+mask+normalContent;
  return panels.some(p=>p.image&&!(p.clipImage??p.kind==='normal'))?`<defs><clipPath id="panel-page-clip"><rect width="${project.width}" height="${project.height}"/></clipPath></defs><g clip-path="url(#panel-page-clip)">${content}</g>`:content;
 }
