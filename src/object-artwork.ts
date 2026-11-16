@@ -1,8 +1,11 @@
+import {trimToPanel,panelClipId} from './balloon-panels';
+import {panelPath} from './panels';
+import type {Project} from './model';
 import type {Balloon} from './model';
 import {balloonPath} from './geometry';
 import {textArtworkSVG} from './text-artwork';
 function rotated(angle:number,cx:number,cy:number,content:string){return angle?`<g transform="rotate(${angle} ${cx} ${cy})">${content}</g>`:content;}
-export function objectArtworkSVG(b:Balloon):string{
+function rawObjectArtworkSVG(b:Balloon):string{
  const body=b.kind==='text'?'':`<path d="${balloonPath(b)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${b.strokeWidth}" stroke-linejoin="round"/>`;
  const f=b.textFrame,shape=rotated(b.bodyRotation,b.width/2,b.height/2,body),text=rotated(b.textRotation,f.x+f.width/2,f.y+f.height/2,textArtworkSVG(b));
  const placed=(content:string)=>`<g transform="translate(${b.x} ${b.y})">${content}</g>`;
@@ -12,3 +15,5 @@ export function objectArtworkSVG(b:Balloon):string{
  // Clip in manuscript space, outside any rotation/translation of the artwork.
  return defs+`<g clip-path="url(#${id})">${placed(shape+(c.includeText?text:''))}</g>`+(c.includeText?'':placed(text));
 }
+
+export function objectArtworkSVG(b:Balloon,project?:Project):string{const raw=rawObjectArtworkSVG(b),panel=trimToPanel(b,project);if(!panel)return raw;const id=panelClipId(b);return `<defs><clipPath id="${id}" clipPathUnits="userSpaceOnUse"><path d="${panelPath(panel)}"/></clipPath></defs><g clip-path="url(#${id})">${raw}</g>`;}

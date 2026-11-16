@@ -25,3 +25,10 @@
 .hint,.field>span,.properties-empty>p,.help-note,.fit-info,.import-sizing small{font-size:11px}.field input[type=number],.field select{font-size:11px}.layer-row small,.textarea-footer,.privacy-note small,.properties-footer{font-size:10px}.field>span,.panel-section .subheading{font-weight:500}textarea::placeholder{color:var(--ui-muted);opacity:1}.statusbar>span:first-child{flex-shrink:0}.statusbar>span:nth-child(2){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.shape-buttons svg{stroke:#505d49}@media(max-width:700px){.statusbar>span:first-child{font-size:9px}}
 
 .properties-heading{flex-shrink:0}.properties-heading>div{min-width:0;flex:1}.properties-heading h2{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.selected-panel-label{display:inline-block;padding:4px 7px;border:1px solid #aab8a0;border-radius:5px;background:#e9efdf;color:var(--ui-text);font-size:11px;font-weight:600;letter-spacing:0;white-space:nowrap}
+
+/* v2.5: membership, clipboard and confirmation controls. */
+.clipboard-actions{display:flex;flex-wrap:wrap;gap:6px}
+.clipboard-actions .mini-button{flex:1 1 auto;white-space:nowrap}
+.panel-action-modal>.button{margin:8px 6px 0 0;white-space:normal;height:auto;min-height:36px}
+.panel-action-modal .help-note{overflow-wrap:anywhere;line-height:1.8}
+.merge-overlay path{cursor:pointer;pointer-events:all}

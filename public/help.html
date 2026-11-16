@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>コマに画像を入れる方法 — Comic-Lab v2.42</title>
+<title>コマに画像を入れる方法 — Comic-Lab v2.5α</title>
 <style>
 :root{--ui-text:#202420;--ui-secondary:#394238;--ui-muted:#50584e;--ui-accent:#294933;--ui-warning:#805017;--ui-danger:#8b3f2d}
 @font-face{font-family:Noto;src:url('./fonts/NotoSansJP.ttf') format('truetype');font-display:swap}*{box-sizing:border-box}body{margin:0;background:#f7f7f3;color:var(--ui-text);font:15px/1.9 Noto,'Hiragino Kaku Gothic ProN',sans-serif}main{max-width:840px;margin:auto;padding:32px 24px 64px}a{color:var(--ui-accent);text-underline-offset:4px}header{display:flex;justify-content:space-between;gap:20px;align-items:center;border-bottom:1px solid #dce3d4;padding-bottom:16px}header strong{font:700 24px Georgia,serif}h1{font-size:clamp(24px,5vw,34px);line-height:1.5;margin:32px 0 12px}h2{font-size:20px;margin:30px 0 12px}p{margin:12px 0}.intro{color:var(--ui-secondary)}.note{padding:16px 20px;background:#eef3e6;border-left:4px solid #73926a;border-radius:4px}.warning{background:#fff3de;border-color:#ba8a4e}.steps{padding:0;list-style:none;counter-reset:step}.steps li{position:relative;padding:20px 20px 20px 68px;margin:14px 0;background:#fffefa;border:1px solid #dfe6d5;border-radius:10px;counter-increment:step}.steps li:before{content:counter(step);position:absolute;left:20px;top:20px;background:#45664c;color:white;border-radius:50%;width:30px;height:30px;text-align:center;line-height:30px}.steps h2{font-size:18px;margin:0}.steps p{margin:8px 0 0}.layout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:20px 0}.layout div{padding:16px 10px;text-align:center;border:1px solid #dce4d2;border-radius:8px;background:#fff}.layout b{display:block}.layout .focus{background:#edf3e5;border:2px solid #66865b}table{border-collapse:collapse;width:100%;background:#fff}th,td{padding:13px;text-align:left;border:1px solid #dfe6d5}th{width:35%;font-size:14px}footer{margin-top:32px;color:var(--ui-secondary);font-size:13px}@media(max-width:550px){main{padding:20px 16px 40px}body{font-size:14px}.layout{gap:5px;font-size:12px}.layout div{padding:12px 5px}.steps li{padding:16px 14px 16px 55px}.steps li:before{left:14px;top:16px;width:26px;height:26px;line-height:26px}header strong{font-size:21px}th,td{padding:10px}}
 </style>
 </head>
 <body><main>
-<header><strong>comic.lab <small>v2.42 ヘルプ</small></strong><a href="./">エディタを開く</a></header>
+<header><strong>comic.lab <small>v2.5α ヘルプ</small></strong><a href="./">エディタを開く</a></header>
 <h1 id="panel-images">選択したコマに画像を入れる方法</h1>
-<nav aria-label="ヘルプ目次"><a href="#panel-images">画像を入れる</a> ／ <a href="#free-panels">分割・統合・斜めコマ</a> ／ <a href="#background-panels">背景コマ</a></nav><p class="intro">新規漫画ページのコマに、PNG・JPEG・WebP画像を配置できます。このヘルプは別タブで開くので、編集中の画面を残したまま確認できます。</p>
+<nav aria-label="ヘルプ目次"><a href="#panel-images">画像を入れる</a> ／ <a href="#free-panels">分割・統合・斜めコマ</a> ／ <a href="#background-panels">背景コマ</a> ／ <a href="#linked-dialogues">吹き出し連動・コピー</a></nav><p class="intro">新規漫画ページのコマに、PNG・JPEG・WebP画像を配置できます。このヘルプは別タブで開くので、編集中の画面を残したまま確認できます。</p>
 <div class="note warning"><strong>使うのは、コマを選択した後の「右側」のボタンです。</strong><br>左側の「画像を読み込む」は、完成済み漫画画像を原稿として開く操作です。コマへの画像配置には使いません。</div>
 <div class="layout" role="img" aria-label="左側でコマ選択、中央で入れたいコマをクリック、右側のコマ内画像から読み込みます"><div><b>① 左側</b>コマ選択</div><div><b>② 中央</b>入れたいコマをクリック</div><div class="focus"><b>③ 右側</b>コマ内画像<br>画像を読み込む</div></div>
 <ol class="steps">
 <li><h2>コマ割りのあるページを開く</h2><p>初めて使う場合は、左側の<strong>「新規作成」</strong>を押します。サイズとコマ割りを選び、<strong>「漫画ページを作成」</strong>を押してください。既に新規漫画ページを編集中なら、この手順は不要です。</p></li>
-<li><h2>画像を入れたいコマを選ぶ</h2><p>左側の<strong>「コマ編集」→「コマ選択」</strong>を押し、中央のキャンバスでコマをクリックします。選択したコマには点線と四隅のハンドルが出ます。左側のレイヤー一覧の「コマ 1」などからも選べます。</p></li>
+<li><h2>画像を入れたいコマを選ぶ</h2><p>中央のキャンバスでコマの内部をクリック・タップします。枠線なしでも選択できます。新規ページでは最初のコマを自動選択します。選択したコマには点線と四隅のハンドルが出ます。左側のレイヤー一覧の「コマ 1」などからも選べます。</p></li>
 <li><h2>右側の「画像を読み込む」を押す</h2><p>右側のプロパティに<strong>「コマ内画像」</strong>が表示されます。上部の「プロパティ」横に選択中のコマ番号が表示されます。この表示は設定欄をスクロールしても残ります。設定欄の<strong>「コマ内画像」→「画像を読み込む」</strong>を押し、端末のPNG・JPEG・WebP画像を選んでください。選んだ画像がそのコマに配置されます。</p></li>
 <li><h2>「内部画像を編集」で位置を調整する</h2><p>右側の<strong>「内部画像を編集」</strong>を押し、コマ内をドラッグすると画像だけが動きます。編集中はガイドがオレンジになり、枠のハンドルは隠れます。画像の大きさは<strong>拡大率スライダー・数値入力</strong>で調整できます。</p></li>
 </ol>
-<div class="note"><strong>スマートフォンの場合</strong><br>上部の「ツール・レイヤー」でコマ選択ツールを選びます。コマをタップした後、上部の<strong>「プロパティ」</strong>を押すと、画像を読み込む設定が開きます。画像の位置はタッチドラッグ、倍率はスライダーで調整できます。</div>
+<div class="note"><strong>スマートフォンの場合</strong><br>画面のコマを直接タップできます。コマをタップした後、上部の<strong>「プロパティ」</strong>を押すと、画像を読み込む設定が開きます。画像の位置はタッチドラッグ、倍率はスライダーで調整できます。</div>
 <h2>画像の見え方を変える</h2>
 <table><tbody>
 <tr><th scope="row">Cover</th><td>縦横比を維持してコマ全体を埋めます。コマからはみ出た部分は隠れます。画像読込時の初期配置です。</td></tr>
@@ -37,13 +37,22 @@
 <ul><li>右側が「セリフ」になっている場合は、吹き出しが選択されています。「コマ選択」に切り替えて、コマを選び直してください。</li><li>コマ編集のない完成済み画像モードでは、この機能は使えません。「新規作成」から漫画ページを作成してください。</li><li>画像が既に入っているコマでは、ボタン名が<strong>「画像を変更」</strong>になります。</li></ul>
 <h2 id="free-panels">分割・統合・斜めコマを作る</h2>
 <p>コマを選ぶと、右側に<strong>「コマ形状・構成」</strong>が表示されます。内部画像を操作するときは「内部画像を編集」、形状を操作するときは「コマ枠を編集」または「頂点編集」を使います。</p>
-<ol><li><strong>分割：</strong>「分割位置（%）」を10〜90%で指定し、左の「左右に分割」（縦方向の分割線で左・右の2コマ）または右の「上下に分割」（横方向の分割線で上・下の2コマ）を押します。ガターを挟んだ2コマになります。画像は同じ素材を参照し、構図を保ちます。分割後の画像はそれぞれ動かせます。</li><li><strong>統合：</strong>上部の「プロパティ」横で現在のコマ番号を確認し、「統合相手」で、もう1つの通常コマを選びます。相手は金色の点線で表示されます。両方に画像がある場合は、使用する画像を選んでから「コマを統合」を押します。外形が長方形になる隣接2コマが対象です。できない理由は設定欄に表示します。</li><li><strong>斜めコマ：</strong>「頂点編集」を押し、紫の丸をドラッグします。各頂点だけが動き、画像の位置・倍率は維持されます。辺が交差する位置や細すぎる形には変更できません。「頂点を初期位置に戻す」「長方形に戻す」で戻せます。</li></ol>
-<p>分割・統合・頂点ドラッグは取り消し／やり直しに対応します。統合で表示に採用しなかった画像も、取り消しで復元できます。</p>
+<ol><li><strong>分割：</strong>「分割位置（%）」を10〜90%で指定し、左の「左右に分割」（縦方向の分割線で左・右の2コマ）または右の「上下に分割」（横方向の分割線で上・下の2コマ）を押します。ガターを挟んだ2コマになります。画像は同じ素材を参照し、構図を保ちます。分割後の画像はそれぞれ動かせます。</li><li><strong>統合：</strong>上部の「プロパティ」横で統合元のコマ番号を確認し、「コマを統合」を押します。統合元は青、候補は緑の破線と✓（そのまま統合）、黄色の点線と△（サイズ調整あり）で表示されます。候補を画面でクリックしてください。吹き出しが重なっていても選べます。両方に画像がある場合は使用する画像を選びます。サイズ調整がある場合は、変更前後の位置・寸法と変更する端を確認して「サイズを揃えて統合」を押します。確認するまではデータを変更しません。Esc・キャンセルで終了できます。</li><li><strong>斜めコマ：</strong>「頂点編集」を押し、紫の丸をドラッグします。各頂点だけが動き、画像の位置・倍率は維持されます。辺が交差する位置や細すぎる形には変更できません。「頂点を初期位置に戻す」「長方形に戻す」で戻せます。</li></ol>
+<p>統合は隣接する通常の長方形コマが対象です。統合元を固定し、相手の高さ（左右統合）または幅（上下統合）だけを合わせます。寸法差と両端のずれが、それぞれ統合元寸法の10%以内、かつ50px以内であることが条件です。離れたコマ・斜めコマ・調整によって別のコマへ重なる組み合わせは候補にしません。</p><p>分割・統合・頂点ドラッグは取り消し／やり直しに対応します。サイズ合わせと統合は1回の取り消しで両方復元します。統合で表示に採用しなかった画像も、取り消しで復元できます。</p>
 <h2 id="background-panels">画像を背景に使う</h2><p>通常コマの内側はページ背景色で下塗りし、その上にコマ内画像を表示します。空のコマや透明PNGの透明部分に、背面の背景画像は透けません。背景画像は背景コマ自身の領域や、表示を許可したコマ間に見えます。</p>
 <p>右側の「コマ種別」を<strong>「画像コマ（背景）」</strong>にすると、画像と位置・倍率を保ったまま通常コマの後ろへ移ります。初期状態では枠線なし・画像クリッピングOFFです。枠線とクリッピングは別々に切り替えられます。</p>
 <div class="note"><strong>背景が見えないとき</strong><br>左側のページ設定で<strong>「コマ間の背景を表示」</strong>をONにしてください。OFFでは、通常コマと画像入り背景コマの領域外をページ背景色で覆います。背景コマ自身の輪郭内は隠しません。通常コマが1つもない場合は、背景だけを表示します。</div>
 <p>背景コマの画像も「内部画像を編集」で移動・倍率調整できます。背景コマの分割・統合・頂点編集は今回の対象外です。必要なら「通常コマ」に戻して操作してください。</p>
 <h2>編集内容を保存する</h2>
 <p>再編集したい場合は上部の<strong>「プロジェクト保存」</strong>でZIPを保存してください。画像・コマ・セリフがまとめて保存されます。完成原稿は<strong>「PNG書き出し」</strong>で出力できます。<strong>セリフ設定JSONにはコマ画像は含まれません。</strong></p>
+<h2 id="linked-dialogues">コマと吹き出しを連動させる</h2>
+<ol><li>コマを選んでから吹き出しを追加すると、そのコマに所属して中央付近へ配置されます。しっぽを含め、可能な限りコマ内へ収めます。小さなコマでも文字や本体を勝手に縮小しません。</li><li>吹き出しは画面で直接選べます。所属コマは上部の「プロパティ」横に表示され、設定欄の「所属コマ」から変更できます。他のコマへドラッグしただけでは所属は変わりません。</li><li>「コマ連動トリミング」をONにすると、本体・しっぽ・文字全体を所属コマの輪郭で切り抜きます。OFFにすると枠はみ出し表示ができます。通常コマへの新規作成はON、背景コマはOFFです。手動クリッピングも残り、手動範囲を適用した後にコマ輪郭で切り抜きます。</li><li>コマを移動すると所属する吹き出しも移動します。コマのサイズ変更では相対位置が追従し、吹き出し・文字のサイズや装飾は維持します。頂点編集では位置を動かさず、トリミング輪郭だけが変わります。</li><li>コマを選ぶと右パネルに所属する吹き出し一覧が出ます。コマのハンドルは吹き出しより前面にあり、重なっていても操作できます。</li></ol>
+<h2>別のコマへコピーする</h2>
+<ol><li>吹き出しを選び、「コピー」を押します。「書式のみコピー」ならセリフ本文を空にして形状・文字書式・装飾をコピーします。</li><li>貼り付け先のコマをクリックし、左側の「貼り付け」を押します。元コマ内の相対位置を基準に、新しいIDで作成します。吹き出し・文字のサイズ、回転、しっぽ、トリミング設定を保持します。</li></ol>
+<p>Ctrl / ⌘ C・Vでも操作できます。セリフなどの入力欄では通常の文字コピー・貼り付けを優先します。コピーはこのアプリ内の一時データです。Ctrl / ⌘ Dによる従来の複製も使えます。</p>
+<h2>分割・削除と保存</h2>
+<p>分割時は吹き出し中心が入る側へ所属を引き継ぎます。中心がガターやコマ外の場合は所属先を選んでから確定します。統合では両コマの吹き出しを位置・文字の変更なしに引き継ぎます。</p>
+<p>吹き出しがあるコマを削除すると「コマと所属する吹き出しを削除」「吹き出しを残して所属解除」「キャンセル」を選べます。取り消しで復元できます。</p>
+<p>所属・トリミング・画像・コマ割りの保存はプロジェクトZIPを使用してください。セリフ設定JSONは従来どおり画像やコマ割りを含みません。同じIDのコマがない場合は所属先を後から指定でき、文字や位置を自動変更しません。古いページの所属なし吹き出しもそのまま編集できます。完成済み漫画画像の編集は画像全体を仮想コマとして扱います。</p>
 <footer>自動保存はありません。画像は端末内で処理し、元画像を破壊的に切り取りません。元の編集画面には、このタブを閉じて戻ってください。</footer>
 </main></body></html>

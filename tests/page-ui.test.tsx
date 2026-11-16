@@ -20,9 +20,9 @@ async function saved(){await click('プロジェクト保存');const blob=vi.moc
 const origin={left:-200,top:-300};
 async function setup(){vi.useFakeTimers();vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);vi.stubGlobal('innerWidth',1400);vi.stubGlobal('window',{addEventListener:vi.fn(),removeEventListener:vi.fn(),confirm:vi.fn(()=>true)});const node={clientWidth:800,clientHeight:600,clientLeft:0,clientTop:0,scrollTo:vi.fn(),focus:vi.fn(),click:vi.fn(),getBoundingClientRect:()=>({left:240,top:120})};await act(async()=>{renderer=create(<App/>,{createNodeMock:e=>e.type==='svg'&&e.props['aria-label']==='漫画編集キャンバス'?{getBoundingClientRect:()=>origin}:node});});await click('新規作成');await click('漫画ページを作成');await act(async()=>{vi.advanceTimersByTime(60);});}
 const pointer=(x:number,y:number)=>{const zoom=renderer.root.findByProps({'aria-label':'漫画編集キャンバス'}).props.width/1200;return{clientX:origin.left+x*zoom,clientY:origin.top+y*zoom,pointerId:1,preventDefault:vi.fn(),stopPropagation:vi.fn(),currentTarget:{setPointerCapture:vi.fn()}};};
-it('edits panels at zoomed paper coordinates without touching dialogue, then saves/restores a complete page ZIP',async()=>{
+it('edits panels at zoomed paper coordinates with unassigned legacy dialogue unchanged, then saves/restores a complete page ZIP',async()=>{
  await setup();expect(renderer.root.findAllByProps({'aria-label':'コマ 1'})).toHaveLength(1);
- await click('ギザギザ＋');const before=artwork();expect(before).toHaveLength(1);await click('コマ選択');expect(artwork()).toEqual(before);
+ await click('ギザギザ＋');await change('所属コマ','');const before=artwork();expect(before).toHaveLength(1);await click('コマ選択');expect(artwork()).toEqual(before);
  const initial=(await saved()).project;const panel=initial.panels[0],bounds=panelBounds(panel);
  await act(async()=>renderer.root.findByProps({'aria-label':'コマ 1'}).props.onPointerDown(pointer(bounds.x+10,bounds.y+10)));
  await act(async()=>viewport().props.onPointerMove(pointer(bounds.x+35,bounds.y+40)));await act(async()=>viewport().props.onPointerUp());
@@ -42,7 +42,7 @@ it('edits panels at zoomed paper coordinates without touching dialogue, then sav
  await act(async()=>renderer.root.findByProps({'aria-label':'セリフ設定JSONファイル'}).props.onChange({target:{files:[new File([json],'dialogues.json')],value:''}}));await click('置き換えて読み込む');expect((await saved()).project).toEqual(edited.project);
 });
 it('creates blank/preset pages, adds panels, confirms template replacement, and preserves balloons and selection UI state',async()=>{
- await setup();await click('文字のみ＋');await click('文字設定');await click('コマ選択');const hit=renderer.root.findAllByType('rect').find(n=>n.props.pointerEvents==='none'&&n.props.transform);expect(hit).toBeDefined();await click('通常コマを追加');expect((await saved()).project.panels).toHaveLength(3);
+ await setup();await click('文字のみ＋');await click('文字設定');await click('コマ選択');const hit=renderer.root.findAllByType('rect').find(n=>n.props.pointerEvents==='all'&&n.props.transform);expect(hit).toBeDefined();await click('通常コマを追加');expect((await saved()).project.panels).toHaveLength(3);
  vi.mocked(window.confirm).mockReturnValueOnce(false);await change('コマ割りテンプレート','blank');await click('テンプレートを適用');expect((await saved()).project.panels).toHaveLength(3);
  await click('テンプレートを適用');let p=(await saved()).project;expect(p.panels).toHaveLength(0);expect(p.balloons).toHaveLength(1);
  await change('ページサイズ','landscape');await change('ページ背景色','#eeddcc');await change('ページ余白','60');await change('コマ間隔','30');await change('コマ割りテンプレート','four-grid');await click('テンプレートを適用');p=(await saved()).project;expect(p.width).toBe(1800);expect(p.height).toBe(1200);expect(p.page.backgroundColor).toBe('#eeddcc');expect(panelBounds(p.panels[0]).x).toBe(60);expect(p.panels).toHaveLength(4);

@@ -1,0 +1,20 @@
+import type{Project}from'./model';import{validateProject}from'./model';import type{Panel,PanelPoint}from'./page-data';import{panelBounds}from'./page-data';import{isRectangle,rectPoints,changeShape}from'./panel-geometry';import{mergePanels}from'./panel-operations';
+export const MERGE_SIZE_RATIO=.1,MERGE_SIZE_PIXELS=50;
+export type MergeCandidate={sourceId:string;targetId:string;adjustment:'none'|'height'|'width';before:ReturnType<typeof panelBounds>;after:ReturnType<typeof panelBounds>;panel:Panel};
+function intersectionArea(points:PanelPoint[],rect:ReturnType<typeof panelBounds>){let polygon=points.map(p=>[...p]as PanelPoint);for(const[axis,edge,sign]of[[0,rect.x,1],[0,rect.x+rect.width,-1],[1,rect.y,1],[1,rect.y+rect.height,-1]]as const){const output:PanelPoint[]=[];for(let i=0;i<polygon.length;i++){const a=polygon[i],b=polygon[(i+1)%polygon.length],insideA=sign*(a[axis]-edge)>=0,insideB=sign*(b[axis]-edge)>=0;if(insideA)output.push(a);if(insideA!==insideB){const t=(edge-a[axis])/(b[axis]-a[axis]);output.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);}}polygon=output;}return Math.abs(polygon.reduce((s,a,i)=>{const b=polygon[(i+1)%polygon.length];return s+a[0]*b[1]-a[1]*b[0];},0))/2;}
+export function mergeCandidates(project:Project,sourceId:string):MergeCandidate[]{
+ const a=project.panels?.find(p=>p.id===sourceId);if(!a||a.kind!=='normal'||a.editing.locked||!isRectangle(a))return[];const source=panelBounds(a),g=project.page?.gutter??0,eps=1e-6,result:MergeCandidate[]=[];
+ for(const b of project.panels??[]){if(b.id===a.id||b.kind!=='normal'||b.editing.locked||!isRectangle(b))continue;const target=panelBounds(b),gapX=Math.max(source.x,target.x)-Math.min(source.x+source.width,target.x+target.width),gapY=Math.max(source.y,target.y)-Math.min(source.y+source.height,target.y+target.height);let after:typeof target|undefined,axis:'height'|'width'='height';
+  if(gapX>=-eps&&gapX<=g+eps){const tolerance=Math.min(source.height*MERGE_SIZE_RATIO,MERGE_SIZE_PIXELS);if(Math.abs(source.height-target.height)<=tolerance+eps&&Math.abs(source.y-target.y)<=tolerance+eps&&Math.abs(source.y+source.height-target.y-target.height)<=tolerance+eps){after={...target,y:source.y,height:source.height};axis='height';}}
+  if(!after&&gapY>=-eps&&gapY<=g+eps){const tolerance=Math.min(source.width*MERGE_SIZE_RATIO,MERGE_SIZE_PIXELS);if(Math.abs(source.width-target.width)<=tolerance+eps&&Math.abs(source.x-target.x)<=tolerance+eps&&Math.abs(source.x+source.width-target.x-target.width)<=tolerance+eps){after={...target,x:source.x,width:source.width};axis='width';}}
+  if(!after)continue;const x=Math.min(source.x,after.x),y=Math.min(source.y,after.y),merged={x,y,width:Math.max(source.x+source.width,after.x+after.width)-x,height:Math.max(source.y+source.height,after.y+after.height)-y};
+  if((project.panels??[]).some(p=>p.kind==='normal'&&p.id!==a.id&&p.id!==b.id&&(intersectionArea(p.points,after!)>intersectionArea(p.points,target)+1||intersectionArea(p.points,merged)>intersectionArea(p.points,source)+intersectionArea(p.points,target)+1)))continue;
+  const panel=changeShape(b,rectPoints(after.x,after.y,after.width,after.height));try{validateProject({...project,panels:project.panels!.map(p=>p.id===b.id?panel:p)});}catch{continue;}
+  result.push({sourceId:a.id,targetId:b.id,before:target,after,panel,adjustment:Math.abs(after.x-target.x)+Math.abs(after.y-target.y)+Math.abs(after.width-target.width)+Math.abs(after.height-target.height)<eps?'none':axis});
+ }return result;
+}
+export function mergeLinkedPanels(project:Project,candidate:MergeCandidate,imageId?:string):Project{
+ const fresh=mergeCandidates(project,candidate.sourceId).find(c=>c.targetId===candidate.targetId);if(!fresh)throw Error('統合候補の条件が変わりました。候補を選び直してください。');
+ const prepared={...project,panels:project.panels!.map(p=>p.id===fresh.targetId?fresh.panel:p)},merged=mergePanels(prepared,fresh.sourceId,fresh.targetId,imageId),old=new Set(project.panels!.map(p=>p.id)),created=merged.panels!.find(p=>!old.has(p.id))!;
+ return{...merged,balloons:project.balloons.map(b=>b.panelId===fresh.sourceId||b.panelId===fresh.targetId?{...b,panelId:created.id}:b)};
+}

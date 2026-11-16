@@ -74,7 +74,7 @@ export async function readProject(file:File):Promise<Document>{
 const escape=(s:string)=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
 export function artworkSVG(project:Project,image:string|null,assets:ImageResources={}){
  const background=isPageProject(project)?`<rect width="100%" height="100%" fill="${project.page.backgroundColor}"/>`:image?`<image href="${escape(image)}" width="${project.width}" height="${project.height}"/>`:'<rect width="100%" height="100%" fill="white"/>';
- const layers=project.balloons.map(objectArtworkSVG).join('');
+ const layers=project.balloons.map(b=>objectArtworkSVG(b,project)).join('');
  return`<svg xmlns="http://www.w3.org/2000/svg" width="${project.width}" height="${project.height}" viewBox="0 0 ${project.width} ${project.height}">${background}${panelImagesSVG(project,assets)}${panelArtworkSVG(project)}${layers}</svg>`;
 }
 export async function exportPNG(doc:Document):Promise<Blob>{

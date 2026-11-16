@@ -43,3 +43,11 @@ it('loads a legacy image ZIP through the existing decoder without adding new pag
  const restored=await readProject(new File([projectZip(doc) as BlobPart],'v155.zip'));
  expect(restored).toEqual(doc);expect(restored.project.version).toBe(1);expect(restored.project).not.toHaveProperty('page');expect(restored.project).not.toHaveProperty('panels');expect(restored.project.balloons[0]).not.toHaveProperty('panelId');
 });
+
+it('round-trips ownership, per-panel trimming, manual clipping and legacy unassigned dialogue without PNG guides',async()=>{
+ const doc=newPageDocument(1200,1800,{template:'four-grid'}),panels=doc.project.panels!;panels[3].kind='background';panels[3].borderVisible=false;
+ doc.project.balloons=(['ellipse','rounded','text','zigzag']as const).map((kind,i)=>{const b=newBalloon(kind,1200,1800,i);b.panelId=panels[i].id;b.panelTrim=i!==2;b.bodyRotation=15;b.textRotation=-20;b.clip.enabled=true;b.clip.includeText=true;b.style.decoration.outline.enabled=true;b.style.decoration.shadow.enabled=true;return b;});
+ const legacy=newBalloon('text',1200,1800,0);doc.project.balloons.push(legacy);const before=structuredClone(doc),svg=artworkSVG(doc.project,null),restored=await readProject(new File([projectZip(doc)as BlobPart],'linked.zip'));
+ expect(restored).toEqual(before);expect(artworkSVG(restored.project,null)).toBe(svg);expect(svg.match(/id="balloon-panel-/g)).toHaveLength(3);expect(svg).toContain('object-clip-');expect(svg).not.toMatch(/panel-selection|panel-handles|merge-overlay|stroke-dasharray|pointer-events/);expect(restored.project.balloons[4]).not.toHaveProperty('panelId');
+ const data=parseDialoguesJSON(dialoguesJSON(doc.project));expect(applyDialogues(doc.project,data,'keep')).toEqual(doc.project);const foreign={...doc.project,panels:[]};expect(applyDialogues(foreign,data,'keep').balloons).toEqual(doc.project.balloons);expect(artworkSVG(foreign,null)).not.toContain('balloon-panel-');
+});
