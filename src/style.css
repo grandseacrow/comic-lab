@@ -32,3 +32,20 @@
 .panel-action-modal>.button{margin:8px 6px 0 0;white-space:normal;height:auto;min-height:36px}
 .panel-action-modal .help-note{overflow-wrap:anywhere;line-height:1.8}
 .merge-overlay path{cursor:pointer;pointer-events:all}
+
+/* v2.6 workspace shell: file operations above, production tools at the left. */
+[hidden]{display:none!important}
+.workspace-header{height:auto;min-height:64px;padding:10px 20px;gap:12px;overflow:visible}
+.workspace-document{flex:1;min-width:0;display:flex;align-items:center;gap:12px}
+.workspace-document strong,.workspace-document>span:not(.save-state){overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px}
+.workspace-document .save-state{color:#303b30;font-size:11px}.workspace-document .failed{color:#8b3f2d;font-weight:700}
+.file-menu{position:relative}.file-menu-backdrop{position:fixed;inset:0;z-index:10;cursor:default}.file-menu-items{position:absolute;right:0;top:calc(100% + 6px);z-index:11;width:290px;max-height:75dvh;overflow:auto;padding:6px;background:#fff;border:1px solid #cbd3c5;border-radius:8px;box-shadow:0 8px 30px #25342126}
+.file-menu-items button{display:block;text-align:left;padding:10px 12px;width:100%;min-height:40px;border-radius:4px}.file-menu-items button:hover:not(:disabled){background:#edf2e8}
+.quick-toolbar{min-height:52px;display:flex;align-items:center;gap:6px;padding:5px 20px;border-bottom:1px solid #dce1d5;background:#f9faf6;overflow-x:auto;flex-shrink:0;z-index:4}
+.quick-action{display:flex;flex-shrink:0}.quick-action>button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:40px;min-height:40px;border:1px solid #d8ded0;border-radius:5px;background:#fff;padding:7px 10px}.quick-action>button:hover:not(:disabled){background:#eaf0e2}
+.copy-menu{position:fixed;z-index:15;top:117px;left:min(300px,40vw);background:#fff;border:1px solid #bcc9b4;box-shadow:0 6px 20px #25342122;border-radius:6px;padding:8px}.copy-menu button{min-height:40px}
+.workspace-modal>.button{margin:8px 8px 0 0;white-space:normal}.workspace-modal .field{margin:12px 0}.workspace-modal input{min-height:40px}.workspace-modal .inline-warning{display:block}.recent-project{display:flex;flex-direction:column;align-items:flex-start;width:100%;padding:12px;border-bottom:1px solid #dce1d5;min-height:48px}.recent-project small{color:#50584e}
+.page-controls>.button{display:block;width:100%;margin:6px 0}.page-controls>div{padding-top:10px}.frequent-text .field{margin-bottom:10px}.property-accordion>h3>button{min-height:40px}.selected-panel-label{max-width:140px;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:900px){.workspace-header{padding:8px 12px;gap:8px}.workspace-header .brand{font-size:23px}.workspace-document{flex-wrap:wrap;gap:3px 8px}.workspace-document strong{max-width:160px}.workspace-document>span{font-size:10px}.workspace-document .save-state{border:0;padding:0}.quick-toolbar{padding:4px 10px;gap:4px}.quick-action>button{min-width:44px;min-height:44px;padding:6px}.quick-action>button>span{display:none}.workspace-header>.version{display:none}.workspace-header .button{min-height:42px;padding:6px 8px}.workspace-header .button svg{display:none}.file-menu-items{width:270px}.copy-menu{top:120px;left:120px}}
+@media(max-width:480px){.workspace-document{flex-direction:column;align-items:flex-start;gap:2px}.workspace-document strong{max-width:120px}.workspace-header .brand{font-size:20px}.workspace-header{gap:6px}.workspace-document .save-state{font-size:10px;max-width:130px;white-space:normal}}
+@media(max-width:480px){.workspace-document>strong,.workspace-document>span{max-width:100%}.workspace-header .version{display:none}.workspace-modal .button{min-height:44px}}
